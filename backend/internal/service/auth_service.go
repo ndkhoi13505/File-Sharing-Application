@@ -32,6 +32,7 @@ func NewAuthService(userRepo repository.UserRepository, authRepo repository.Auth
 
 func (us *authService) CreateUser(username, password, email string) (*domain.User, *utils.ReturnStatus) {
 	email = utils.NormalizeString(email)
+	username = utils.NormalizeString(username)
 
 	existingUserByEmail := &domain.User{}
 	errEmail := us.userRepo.FindByEmail(email, existingUserByEmail)

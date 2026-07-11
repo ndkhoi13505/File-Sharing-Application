@@ -11,6 +11,7 @@ import (
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
+	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +40,10 @@ func (a *Application) DB() *sql.DB {
 }
 
 func NewApplication(cfg *config.Config) *Application {
+	
+	if err := validation.InitValidator(); err != nil {
+		log.Fatalf("failed to initialize custom validator: %v", err)
+	}
 
 	r := gin.Default()
 

@@ -94,4 +94,9 @@ func RegisterCustomValidation(v *validator.Validate) {
 
 		return false
 	})
+
+	var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+	v.RegisterValidation("username_valid", func(fl validator.FieldLevel) bool {
+		return usernameRegex.MatchString(fl.Field().String())
+	})
 }

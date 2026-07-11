@@ -24,10 +24,7 @@ func NewAuthHandler(auth_service service.AuthService) *AuthHandler {
 func (uh *AuthHandler) CreateUser(ctx *gin.Context) {
 	var user domain.UserCreate
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Validation error",
-			"message": "Required fields are missing",
-		})
+		utils.ResponseValidator(ctx, validation.HandleValidationErrors(err))
 		return
 	}
 
