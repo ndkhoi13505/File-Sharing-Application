@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"github.com/skip2/go-qrcode"
 	"golang.org/x/crypto/bcrypt"
@@ -31,16 +31,29 @@ func NewAuthService(userRepo repository.UserRepository, authRepo repository.Auth
 }
 
 func (us *authService) CreateUser(username, password, email string) (*domain.User, *utils.ReturnStatus) {
+	email = utils.NormalizeString(email)
+
+	existingUserByEmail := &domain.User{}
+	errEmail := us.userRepo.FindByEmail(email, existingUserByEmail)
+	if errEmail == nil && existingUserByEmail.Id != "" {
+		return nil, utils.ResponseMsg(utils.ErrCodeConflict, "Email already exists")
+	}
+
+	existingUserByUsername := &domain.User{}
+	errUsername := us.userRepo.FindByUsername(username, existingUserByUsername)
+	if errUsername == nil && existingUserByUsername.Id != "" {
+		return nil, utils.ResponseMsg(utils.ErrCodeConflict, "Username already exists")
+	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, utils.ResponseMsg(utils.ErrCodeInternal, "failed to hash password")
+		return nil, utils.ResponseMsg(utils.ErrCodeInternal, "Failed to hash password")
 	}
 	hashedUserID, err := uuid.NewRandom()
 	if err != nil {
-		return nil, utils.ResponseMsg(utils.ErrCodeInternal, "failed to create UserID")
+		return nil, utils.ResponseMsg(utils.ErrCodeInternal, "Failed to create UserID")
 	}
-	//TODO: add username and email uniqueness check
+
 	user := &domain.User{
 		Id:         hashedUserID.String(),
 		Username:   username,
@@ -137,7 +150,6 @@ func (as *authService) LoginTOTP(cid, totpCode string) (*domain.User, string, *u
 
 	return user, accessToken, nil
 }
-
 
 func (as *authService) Logout(ctx *gin.Context) *utils.ReturnStatus {
 	authHeader := ctx.GetHeader("Authorization")

@@ -33,7 +33,7 @@ func (uh *AuthHandler) CreateUser(ctx *gin.Context) {
 
 	createdUser, err := uh.auth_service.CreateUser(user.Username, user.Password, user.Email)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		err.Export(ctx)
 		return
 	}
 

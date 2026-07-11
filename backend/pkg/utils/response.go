@@ -245,6 +245,13 @@ func (bee *ReturnStatus) Export(c *gin.Context) {
 				"message":	"maxValidityDays must be greater than or equal to minValidityHours",
 			})
 
+		case ErrCodeConflict:
+			out := gin.H{
+				"error":	"Conflict",
+			}
+			maps.Copy(out, args)
+			c.JSON(http.StatusConflict, out)
+
 		default:
 			out := gin.H{
 				"error":	"Internal Server Error",
