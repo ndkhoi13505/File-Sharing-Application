@@ -1,0 +1,118 @@
+package app
+
+import (
+	"database/sql"
+	"log"
+	"time"
+
+	"github.com/ndkhoi13505/File-Sharing-Application/config"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/routes"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/database"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+type Module interface {
+	Routes() routes.Route
+}
+
+type Application struct {
+	config  *config.Config
+	router  *gin.Engine
+	modules []Module
+	db      *sql.DB
+}
+
+type ModuleContext struct {
+	DB *sql.DB
+}
+
+func (a *Application) Router() *gin.Engine {
+	return a.router
+}
+
+func (a *Application) DB() *sql.DB {
+	return a.db
+}
+
+func NewApplication(cfg *config.Config) *Application {
+
+	r := gin.Default()
+
+	corsConfig := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+
+	if len(cfg.CORS.AllowedOrigins) > 0 {
+		corsConfig.AllowOrigins = cfg.CORS.AllowedOrigins
+	} else {
+		corsConfig.AllowAllOrigins = true
+	}
+
+	r.Use(cors.New(corsConfig))
+
+	db, err := database.InitDB(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("unable to connect to db: %v", err)
+	}
+
+	ctx := &ModuleContext{
+		DB: db,
+	}
+
+	tokenService := jwt.NewJWTService()
+	authRepo := repository.NewAuthRepository(db)
+
+	// Khởi tạo Repositories cần thiết
+	fileRepo := repository.NewFileRepository(db)
+	sharedRepo := repository.NewSharedRepository(db)
+	userRepo := repository.NewSQLUserRepository(db)
+
+	// Khởi tạo Storage Service
+	// Cần đảm bảo đường dẫn này đúng với CWD: "cmd/server/uploads"
+	storageService := storage.NewLocalStorage("uploads")
+
+	modules := []Module{
+		NewUserModule(ctx),
+		NewAuthModule(ctx, tokenService),
+
+		// CẬP NHẬT: Thêm fileRepo và storageService cho Admin Module
+		NewAdminModule(cfg, fileRepo, storageService),
+
+		NewFileModule(cfg, fileRepo, sharedRepo, userRepo, storageService),
+	}
+
+	routes.RegisterRoutes(r, tokenService, authRepo, getModuleRoutes(modules)...)
+
+	return &Application{
+		config:  cfg,
+		router:  r,
+		modules: modules,
+		db:      db,
+	}
+}
+
+func (a *Application) Run() error {
+	if a.config.ServerAddress == "" {
+		a.config.ServerAddress = ":8080"
+	}
+
+	log.Printf(" Server is running at http://localhost%s\n", a.config.ServerAddress)
+	return a.router.Run(a.config.ServerAddress)
+}
+
+func getModuleRoutes(modules []Module) []routes.Route {
+	routeList := make([]routes.Route, len(modules))
+	for i, module := range modules {
+		routeList[i] = module.Routes()
+	}
+
+	return routeList
+}

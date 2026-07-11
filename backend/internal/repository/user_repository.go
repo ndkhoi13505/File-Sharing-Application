@@ -1,0 +1,69 @@
+package repository
+
+import (
+	"database/sql"
+
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
+	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
+)
+
+type SQLUserRepository struct {
+	db *sql.DB
+}
+
+func NewSQLUserRepository(DB *sql.DB) UserRepository {
+	return &SQLUserRepository{
+		db: DB,
+	}
+}
+
+func (ur *SQLUserRepository) FindById(id string, user *domain.User) *utils.ReturnStatus {
+	row := ur.db.QueryRow("SELECT * FROM users WHERE id = $1", id)
+	err := row.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Role, &user.EnableTOTP, &user.SecretTOTP)
+
+	if err != nil {
+		return utils.ErrIfExists(utils.ErrCodeInternal, err)
+	}
+
+	return nil
+}
+
+func (ur *SQLUserRepository) FindByEmail(email string, user *domain.User) *utils.ReturnStatus {
+	row := ur.db.QueryRow("SELECT * FROM users WHERE email = $1", email)
+	err := row.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Role, &user.EnableTOTP, &user.SecretTOTP)
+	if err != nil {
+		return utils.ErrIfExists(utils.ErrCodeInternal, err)
+	}
+
+	return nil
+}
+
+func (ur *SQLUserRepository) FindByCId(cid string, user *domain.UsersLoginSession) *utils.ReturnStatus {
+	row := ur.db.QueryRow("SELECT * FROM usersloginsession WHERE cid = $1", cid)
+	err := row.Scan(&user.Id, &user.Cid)
+	if err != nil {
+		return utils.ErrIfExists(utils.ErrCodeInternal, err)
+	}
+
+	return nil
+}
+
+func (ur *SQLUserRepository) AddTimestamp(id string, cid string) *utils.ReturnStatus {
+	_, err := ur.db.Exec(`
+		INSERT INTO usersLoginSession (id, cid)
+		VALUES ($1, $2)
+		ON CONFLICT (id) DO UPDATE 
+		SET cid = EXCLUDED.cid
+	`, id, cid)
+
+	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+}
+
+func (ur *SQLUserRepository) DeleteTimestamp(id string) *utils.ReturnStatus {
+	_, err := ur.db.Exec(`
+		DELETE FROM usersLoginSession
+		WHERE id = $1
+	`, id)
+
+	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+}
