@@ -80,3 +80,20 @@ AS $$
 
     INSERT INTO download (file_id, user_id) VALUES (f_id, u_id);
 $$;
+
+-- =========================================================================
+-- Admin username: admin
+-- Admin email: admin@filesharing.com
+-- Admin password: Admin@123
+-- =========================================================================
+
+INSERT INTO users (username, password, email, role, enableTOTP, secretTOTP)
+VALUES (
+    'admin', 
+    '$2a$10$PTihvTvrf7J3Fl.Od69fPuXkZGlqyl3ZFFGtevLvlkF6OAw5I8leC',
+    'admin@filesharing.com', 
+    'admin',
+    FALSE,
+    ''
+)
+ON CONFLICT (email) DO NOTHING;

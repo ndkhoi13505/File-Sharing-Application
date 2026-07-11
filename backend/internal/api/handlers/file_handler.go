@@ -227,11 +227,15 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 		"createdAt": file.CreatedAt,
 	}
 
-	out["owner"] = gin.H{
-		"id":       owner.Id,
-		"username": owner.Username,
-		"email":    owner.Email,
-		"role":     owner.Role,
+	if owner != nil {
+		out["owner"] = gin.H{
+			"id":       owner.Id,
+			"username": owner.Username,
+			"email":    owner.Email,
+			"role":     owner.Role,
+		}
+	} else {
+		out["owner"] = nil // Hoặc không gán gì cả để trả về null cho Frontend biết đây là file ẩn danh
 	}
 
 	if shared != nil {
