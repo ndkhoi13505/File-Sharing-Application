@@ -1,1 +1,2 @@
 .env
+backend/cmd/server/uploads/

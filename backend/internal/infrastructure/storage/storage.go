@@ -10,5 +10,5 @@ import (
 type Storage interface {
 	SaveFile(file *multipart.FileHeader, filename string) (string, *utils.ReturnStatus)
 	DeleteFile(filename string) *utils.ReturnStatus
-	GetFile(filename string) (io.Reader, *utils.ReturnStatus) // Cần cho Download
+	GetFile(filename string) (io.Reader, *utils.ReturnStatus)
 }

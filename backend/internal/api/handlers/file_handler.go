@@ -357,7 +357,11 @@ func (fh *FileHandler) GetAccessibleFiles(ctx *gin.Context) {
 		return
 	}
 
-	files, err := fh.file_service.GetAccessibleFiles(ctx, userID.(string))
+	// 1. Lấy từ khóa tìm kiếm từ query param '?q=...' trên URL
+	search := ctx.Query("q")
+
+	// 2. Truyền chuỗi search (đã cắt khoảng trắng thừa) vào service
+	files, err := fh.file_service.GetAccessibleFiles(ctx, userID.(string), strings.TrimSpace(search))
 	if err != nil {
 		err.Export(ctx)
 		return

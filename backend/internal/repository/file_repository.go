@@ -25,7 +25,7 @@ type FileRepository interface {
 	RegisterDownload(ctx context.Context, fileID string, userID string) *utils.ReturnStatus
 	GetFileDownloadHistory(ctx context.Context, fileID string) (*domain.FileDownloadHistory, *utils.ReturnStatus)
 	GetFileStats(ctx context.Context, fileID string) (*domain.FileStat, *utils.ReturnStatus)
-	GetAccessibleFiles(ctx context.Context, userIDop string) ([]domain.File, *utils.ReturnStatus)
+	GetAccessibleFiles(ctx context.Context, userIDop string, search string) ([]domain.File, *utils.ReturnStatus)
 }
 
 type fileRepository struct {
@@ -521,40 +521,48 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 	return &stat, nil
 }
 
-func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string) ([]domain.File, *utils.ReturnStatus) {
-	query := `
-		SELECT DISTINCT f.id
-		FROM files f JOIN shared s ON f.id = s.file_id
-		WHERE
-		(NOW() >= f.available_from AND NOW() < f.available_to)
-		AND $1 = s.user_id
-		;
-	`
+func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
+	// Sử dụng tham số động $2 cho điều kiện SEARCH nếu có
+    query := `
+        SELECT DISTINCT f.id
+        FROM files f JOIN shared s ON f.id = s.file_id
+        WHERE
+        (NOW() >= f.available_from AND NOW() < f.available_to)
+        AND s.user_id = $1
+    `
+    args := []any{userID}
 
-	var rows *sql.Rows = nil
-	var err error = nil
+    // Nếu client có truyền từ khóa tìm kiếm
+    if search != "" {
+        query += " AND f.name ILIKE $2"
+        args = append(args, "%"+search+"%") // Tìm kiếm chứa chuỗi (CONTAINS)
+    }
 
-	rows, err = r.db.QueryContext(ctx, query, userID)
+    var rows *sql.Rows = nil
+    var err error = nil
 
-	if err != nil {
-		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-	}
+    rows, err = r.db.QueryContext(ctx, query, args...) // Truyền cụm args động vào
 
-	var out []domain.File
+    if err != nil {
+        return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+    }
+    defer rows.Close()
 
-	for rows.Next() {
-		var fileID string
-		if err := rows.Scan(&fileID); err != nil {
-			return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-		}
+    var out []domain.File
 
-		file, err := r.GetFileByID(ctx, fileID)
-		if err != nil {
-			return nil, err
-		}
+    for rows.Next() {
+        var fileID string
+        if err := rows.Scan(&fileID); err != nil {
+            return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+        }
 
-		out = append(out, *file)
-	}
+        file, err := r.GetFileByID(ctx, fileID)
+        if err != nil {
+            return nil, err
+        }
 
-	return out, nil
+        out = append(out, *file)
+    }
+
+    return out, nil
 }

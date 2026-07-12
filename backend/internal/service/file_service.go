@@ -450,34 +450,35 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string) (
 	return s.fileRepo.GetFileStats(ctx, fileID)
 }
 
-func (s *fileService) GetAccessibleFiles(ctx context.Context, userID string) ([]dto.AccessibleFile, *utils.ReturnStatus) {
-	files, err := s.fileRepo.GetAccessibleFiles(ctx, userID)
+func (s *fileService) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]dto.AccessibleFile, *utils.ReturnStatus) {
+	// Truyền thêm tham số search vào Repo
+    files, err := s.fileRepo.GetAccessibleFiles(ctx, userID, search) 
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	var out []dto.AccessibleFile
+    var out []dto.AccessibleFile
 
-	for _, file := range files {
-		var user domain.User
-		var email *string
+    for _, file := range files {
+        var user domain.User
+        var email *string
 
-		if file.OwnerId != nil {
-			if err := s.userRepo.FindById(*file.OwnerId, &user); err != nil {
-				return nil, err
-			}
-			email = &user.Email
-		}
+        if file.OwnerId != nil {
+            if err := s.userRepo.FindById(*file.OwnerId, &user); err != nil {
+                return nil, err
+            }
+            email = &user.Email
+        }
 
-		out = append(out, dto.AccessibleFile{
-			FileId:      file.Id,
-			FileName:    file.FileName,
-			OwnerEmail:  email,
-			HasPassword: file.HasPassword,
-			ShareToken:  file.ShareToken,
-		})
-	}
+        out = append(out, dto.AccessibleFile{
+            FileId:      file.Id,
+            FileName:    file.FileName,
+            OwnerEmail:  email,
+            HasPassword: file.HasPassword,
+            ShareToken:  file.ShareToken,
+        })
+    }
 
-	return out, nil
+    return out, nil
 }

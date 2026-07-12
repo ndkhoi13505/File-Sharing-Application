@@ -40,7 +40,7 @@ type FileService interface {
 	DownloadFile(ctx context.Context, token string, userID string, password string) (*domain.File, io.Reader, *utils.ReturnStatus)
 	GetFileDownloadHistory(ctx context.Context, fileID string, userID string, pagenum, limit int) (*domain.FileDownloadHistory, *utils.ReturnStatus)
 	GetFileStats(ctx context.Context, fileID string, userID string) (*domain.FileStat, *utils.ReturnStatus)
-	GetAccessibleFiles(ctx context.Context, userID string) ([]dto.AccessibleFile, *utils.ReturnStatus)
+	GetAccessibleFiles(ctx context.Context, userID string, search string) ([]dto.AccessibleFile, *utils.ReturnStatus)
 }
 
 type AdminService interface {

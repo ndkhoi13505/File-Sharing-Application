@@ -1,7 +1,6 @@
 package storage
 
 import (
-	// Import errors
 	"fmt"
 	"io"
 	"log"
