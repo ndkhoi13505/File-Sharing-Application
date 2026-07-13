@@ -15,5 +15,10 @@ export const authService = {
   getCurrentUser: async (): Promise<UserResponse> => {
     const response = await apiClient.get<UserResponse>("/user");
     return response.data;
+  },
+
+  logout: async (): Promise<{ message: string }> => {
+    const response = await apiClient.post("/auth/logout");
+    return response.data;
   }
 };
