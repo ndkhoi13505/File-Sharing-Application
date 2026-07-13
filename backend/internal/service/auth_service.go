@@ -32,18 +32,11 @@ func NewAuthService(userRepo repository.UserRepository, authRepo repository.Auth
 
 func (us *authService) CreateUser(username, password, email string) (*domain.User, *utils.ReturnStatus) {
 	email = utils.NormalizeString(email)
-	username = utils.NormalizeString(username)
 
 	existingUserByEmail := &domain.User{}
 	errEmail := us.userRepo.FindByEmail(email, existingUserByEmail)
 	if errEmail == nil && existingUserByEmail.Id != "" {
 		return nil, utils.ResponseMsg(utils.ErrCodeConflict, "Email already exists")
-	}
-
-	existingUserByUsername := &domain.User{}
-	errUsername := us.userRepo.FindByUsername(username, existingUserByUsername)
-	if errUsername == nil && existingUserByUsername.Id != "" {
-		return nil, utils.ResponseMsg(utils.ErrCodeConflict, "Username already exists")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

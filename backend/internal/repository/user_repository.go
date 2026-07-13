@@ -38,16 +38,6 @@ func (ur *SQLUserRepository) FindByEmail(email string, user *domain.User) *utils
 	return nil
 }
 
-func (ur *SQLUserRepository) FindByUsername(username string, user *domain.User) *utils.ReturnStatus {
-	row := ur.db.QueryRow("SELECT * FROM users WHERE username = $1", username)
-	err := row.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Role, &user.EnableTOTP, &user.SecretTOTP)
-	if err != nil {
-		return utils.ErrIfExists(utils.ErrCodeInternal, err)
-	}
-
-	return nil
-}
-
 func (ur *SQLUserRepository) FindByCId(cid string, user *domain.UsersLoginSession) *utils.ReturnStatus {
 	row := ur.db.QueryRow("SELECT * FROM usersloginsession WHERE cid = $1", cid)
 	err := row.Scan(&user.Id, &user.Cid)

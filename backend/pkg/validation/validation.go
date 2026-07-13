@@ -83,8 +83,6 @@ func HandleValidationErrors(err error) gin.H {
 				case "file_ext":
 					allowedValues := strings.Join(strings.Split(e.Param(), " "), ", ")
 					errors[fieldPath] = fmt.Sprintf("%s must be one of the following extensions: %s", fieldPath, allowedValues)
-				case "username_valid":
-					errors[fieldPath] = fmt.Sprintf("%s must contain only letters, numbers, and underscores", fieldPath)
 			}
 		}
 
