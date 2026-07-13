@@ -1,7 +1,16 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { ShieldCheck, Clock, Lock, FileUp } from "lucide-react";
 
 export default function HomePage() {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      window.location.href = "/dashboard";
+    }
+  }, []);
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50">
       

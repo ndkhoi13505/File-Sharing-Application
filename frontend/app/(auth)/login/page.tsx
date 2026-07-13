@@ -1,14 +1,16 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { authService } from "@/services/auth";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,14 +66,25 @@ export default function LoginPage() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Nhập mật khẩu của bạn"
-              required 
-              className="w-full rounded-xl border border-gray-300 bg-white p-3 text-gray-900 placeholder-gray-400 focus:border-brand-main focus:outline-none focus:ring-1 focus:ring-brand-main transition-colors" 
-            />
+            
+            {/* 🌟 ĐÃ SỬA: Bọc input bằng class relative và thêm nút con mắt y hệt bên Register */}
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Nhập mật khẩu của bạn"
+                required
+                className="w-full rounded-xl border border-gray-300 bg-white p-3 pr-11 text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 transition-colors" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
 
