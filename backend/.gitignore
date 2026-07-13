@@ -1,2 +1,3 @@
 .env
 backend/cmd/server/uploads/
+.DS_Store
