@@ -3,11 +3,11 @@ package dto
 import "github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 
 type UpdatePolicyRequest struct {
-	MaxFileSizeMB            *int `json:"maxFileSizeMB" validate:"omitempty,min_int=1,max_int=500"` // Ví dụ: max 500MB
+	MaxFileSizeMB            *int `json:"maxFileSizeMB" validate:"omitempty,min_int=1,max_int=500"`
 	MinValidityHours         *int `json:"minValidityHours" validate:"omitempty,min_int=1,max_int=24"`
 	MaxValidityDays          *int `json:"maxValidityDays" validate:"omitempty,min_int=1,max_int=365"`
 	DefaultValidityDays      *int `json:"defaultValidityDays" validate:"omitempty,min_int=1,max_int=365"`
-	RequirePasswordMinLength *int `json:"requirePasswordMinLength" validate:"omitempty,min_int=6,max_int=32"`
+	RequirePasswordMinLength *int `json:"requirePasswordMinLength" validate:"omitempty,min_int=8,max_int=32"`
 }
 
 func (r *UpdatePolicyRequest) ToMap() map[string]interface{} {
