@@ -248,16 +248,16 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 	})
 }
 
-func (fh *FileHandler) getFileData(ctx *gin.Context) (*domain.File, []byte, *utils.ReturnStatus) {
+func (fh *FileHandler) getFileData(ctx *gin.Context, registerDownload bool) (*domain.File, []byte, *utils.ReturnStatus) {
 	fileToken := ctx.Param("shareToken")
-	password := ctx.Query("password")
+	password := ctx.GetHeader("X-File-Password")
 	userIDptr, exists := ctx.Get("userID")
 	var userID string = ""
 	if exists {
 		userID = userIDptr.(string)
 	}
 
-	info, file, download_err := fh.file_service.DownloadFile(ctx, fileToken, userID, password)
+	info, file, download_err := fh.file_service.DownloadFile(ctx, fileToken, userID, password, registerDownload)
 	if download_err != nil {
 		return nil, nil, download_err
 	}
@@ -271,7 +271,7 @@ func (fh *FileHandler) getFileData(ctx *gin.Context) (*domain.File, []byte, *uti
 }
 
 func (fh *FileHandler) DownloadFile(ctx *gin.Context) {
-	info, file, err := fh.getFileData(ctx)
+	info, file, err := fh.getFileData(ctx, true)
 	if err != nil {
 		err.Export(ctx)
 		return
@@ -281,7 +281,7 @@ func (fh *FileHandler) DownloadFile(ctx *gin.Context) {
 }
 
 func (fh *FileHandler) PreviewFile(ctx *gin.Context) {
-	info, file, err := fh.getFileData(ctx)
+	info, file, err := fh.getFileData(ctx, false)
 	if err != nil {
 		err.Export(ctx)
 		return

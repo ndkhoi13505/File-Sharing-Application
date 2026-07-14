@@ -340,7 +340,7 @@ func (s *fileService) GetFileInfoID(ctx context.Context, id string, userID strin
 	return s.getFileInfo(ctx, id, userID, false, verbose)
 }
 
-func (s *fileService) DownloadFile(ctx context.Context, token string, userID string, password string) (*domain.File, io.Reader, *utils.ReturnStatus) {
+func (s *fileService) DownloadFile(ctx context.Context, token string, userID string, password string, registerDownload bool) (*domain.File, io.Reader, *utils.ReturnStatus) {
 	fileInfo, _, _, err := s.getFileInfo(ctx, token, userID, true, false)
 
 	if err.IsErr() {
@@ -364,8 +364,10 @@ func (s *fileService) DownloadFile(ctx context.Context, token string, userID str
 		return nil, nil, err
 	}
 
-	if err := s.fileRepo.RegisterDownload(ctx, fileInfo.Id, userID); err.IsErr() {
-		return nil, nil, err
+	if registerDownload {
+		if err := s.fileRepo.RegisterDownload(ctx, fileInfo.Id, userID); err.IsErr() {
+			return nil, nil, err
+		}
 	}
 
 	return fileInfo, fileReader, nil

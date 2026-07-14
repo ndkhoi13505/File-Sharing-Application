@@ -37,7 +37,7 @@ type FileService interface {
 	DeleteFile(ctx context.Context, fileID string, userID string) *utils.ReturnStatus
 	GetFileInfo(ctx context.Context, token string, userID string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus)
 	GetFileInfoID(ctx context.Context, token string, userID string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus)
-	DownloadFile(ctx context.Context, token string, userID string, password string) (*domain.File, io.Reader, *utils.ReturnStatus)
+	DownloadFile(ctx context.Context, token string, userID string, password string, registerDownload bool) (*domain.File, io.Reader, *utils.ReturnStatus)
 	GetFileDownloadHistory(ctx context.Context, fileID string, userID string, pagenum, limit int) (*domain.FileDownloadHistory, *utils.ReturnStatus)
 	GetFileStats(ctx context.Context, fileID string, userID string) (*domain.FileStat, *utils.ReturnStatus)
 	GetAccessibleFiles(ctx context.Context, userID string, search string) ([]dto.AccessibleFile, *utils.ReturnStatus)
