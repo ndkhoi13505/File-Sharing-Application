@@ -347,7 +347,9 @@ func (s *fileService) DownloadFile(ctx context.Context, token string, userID str
 		return nil, nil, err
 	}
 
-	if fileInfo.HasPassword {
+	isOwner := fileInfo.OwnerId != nil && userID != "" && *fileInfo.OwnerId == userID
+
+	if fileInfo.HasPassword && !isOwner{
 		if password == "" {
 			return nil, nil, utils.Response(utils.ErrCodeDownloadPasswordInvalid)
 		}
