@@ -29,6 +29,8 @@ type AuthService interface {
 	VerifyTOTP(userID string, code string) (bool, *utils.ReturnStatus)
 	Logout(ctx *gin.Context) *utils.ReturnStatus
 	LoginTOTP(email, totpCode string) (*domain.User, string, *utils.ReturnStatus)
+	DisableTOTP(userID string, code string) (bool, *utils.ReturnStatus)
+	ChangePassword(userID string, oldPassword, newPassword string) *utils.ReturnStatus
 }
 
 type FileService interface {

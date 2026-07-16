@@ -22,4 +22,6 @@ type AuthRepository interface {
 	SaveSecret(userID string, secret string) *utils.ReturnStatus
 	GetSecret(userID string) (string, *utils.ReturnStatus)
 	EnableTOTP(userID string) *utils.ReturnStatus
+	DisableTOTP(userID string) *utils.ReturnStatus
+	ChangePassword(userID string, newPasswordHash string) *utils.ReturnStatus
 }

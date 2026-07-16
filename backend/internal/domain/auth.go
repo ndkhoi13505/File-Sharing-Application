@@ -6,7 +6,7 @@ type LoginInput struct {
 }
 
 type LoginTOTPInput struct {
-	CID       string `json:"cid" binding:"required"`
+	CID      string `json:"cid" binding:"required"`
 	TOTPCode string `json:"code" binding:"required"`
 }
 
@@ -22,4 +22,9 @@ type UserInfo struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
+}
+
+type ChangePasswordInput struct {
+	OldPassword string `json:"old_password" binding:"required,min=8"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
 }

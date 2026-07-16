@@ -215,3 +215,60 @@ func (as *authService) VerifyTOTP(userID string, code string) (bool, *utils.Retu
 
 	return valid, nil
 }
+
+func (as *authService) DisableTOTP(userID string, code string) (bool, *utils.ReturnStatus) {
+	// 1. Lấy secret hiện tại của user để kiểm chứng
+	secret, err := as.authRepo.GetSecret(userID)
+	if err != nil {
+		return false, err
+	}
+
+	// Nếu user chưa từng cài TOTP thì không cần tắt
+	if secret == "" {
+		return false, utils.ResponseMsg(utils.ErrCodeBadRequest, "TOTP is not enabled for this account")
+	}
+
+	// 2. Xác thực mã code người dùng gửi lên
+	valid := totp.Validate(code, secret)
+	if !valid {
+		return false, nil // Trả về false để báo mã code không chính xác
+	}
+
+	// 3. Nếu mã hợp lệ, tiến hành tắt trong DB
+	if err := as.authRepo.DisableTOTP(userID); err != nil {
+		return true, utils.ResponseMsg(utils.ErrCodeInternal, fmt.Sprintf("Failed to disable TOTP: %v", err))
+	}
+
+	return true, nil
+}
+
+func (as *authService) ChangePassword(userID string, oldPassword, newPassword string) *utils.ReturnStatus {
+	// 1. Lấy thông tin user hiện tại từ Database
+	user := &domain.User{}
+	if err := as.userRepo.FindById(userID, user); err != nil {
+		return utils.ResponseMsg(utils.ErrCodeInternal, "User not found")
+	}
+
+	// 2. So sánh mật khẩu cũ người dùng nhập với mật khẩu lưu trong DB
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return utils.ResponseMsg(utils.ErrCodeBadRequest, "Mật khẩu cũ không chính xác")
+	}
+
+	// Kiểm tra xem mật khẩu mới có trùng mật khẩu cũ không (Tùy chọn bảo mật bổ sung)
+	if oldPassword == newPassword {
+		return utils.ResponseMsg(utils.ErrCodeBadRequest, "Mật khẩu mới không được trùng với mật khẩu cũ")
+	}
+
+	// 3. Tiến hành mã hóa mật khẩu mới
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return utils.ResponseMsg(utils.ErrCodeInternal, "Không thể mã hóa mật khẩu mới")
+	}
+
+	// 4. Lưu mật khẩu mới vào DB thông qua repo
+	if repoErr := as.authRepo.ChangePassword(userID, string(newPasswordHash)); repoErr != nil {
+		return repoErr
+	}
+
+	return nil
+}

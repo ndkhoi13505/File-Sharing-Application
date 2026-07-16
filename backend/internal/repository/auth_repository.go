@@ -75,3 +75,21 @@ func (r *authRepository) EnableTOTP(userID string) *utils.ReturnStatus {
 	_, err := r.db.Exec(`UPDATE users SET "enabletotp" = TRUE WHERE id = $1`, userID)
 	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
 }
+
+func (r *authRepository) DisableTOTP(userID string) *utils.ReturnStatus {
+	_, err := r.db.Exec(`
+		UPDATE users 
+		SET "enabletotp" = FALSE, "secrettotp" = '' 
+		WHERE id = $1
+	`, userID)
+	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+}
+
+func (r *authRepository) ChangePassword(userID string, newPasswordHash string) *utils.ReturnStatus {
+	_, err := r.db.Exec(`
+		UPDATE users 
+		SET password = $1 
+		WHERE id = $2
+	`, newPasswordHash, userID)
+	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+}

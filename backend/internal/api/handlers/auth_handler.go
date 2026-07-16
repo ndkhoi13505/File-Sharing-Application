@@ -218,3 +218,102 @@ func (ah *AuthHandler) LoginTOTP(ctx *gin.Context) {
 		},
 	})
 }
+
+func (ah *AuthHandler) DisableTOTP(c *gin.Context) {
+	if authErr, exists := c.Get("authError"); exists {
+		switch authErr {
+		case "required":
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Unauthorized",
+				"message": "Bearer token is required",
+			})
+		case "invalid":
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Unauthorized",
+				"message": "Invalid or expired access token",
+			})
+		}
+		return
+	}
+
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Invalid or expired access token",
+		})
+		return
+	}
+
+	var req VerifyTOTPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": "TOTP code is required",
+		})
+		return
+	}
+
+	okDisable, err := ah.auth_service.DisableTOTP(userID, req.Code)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !okDisable {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Verification Failed",
+			"message": "The provided TOTP code is incorrect or expired",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "TOTP has been disabled successfully",
+		"totpEnabled": false,
+	})
+}
+
+func (ah *AuthHandler) ChangePassword(c *gin.Context) {
+	if authErr, exists := c.Get("authError"); exists {
+		switch authErr {
+		case "required":
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Unauthorized",
+				"message": "Bearer token is required",
+			})
+		case "invalid":
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error":   "Unauthorized",
+				"message": "Invalid or expired access token",
+			})
+		}
+		return
+	}
+
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Invalid or expired access token",
+		})
+		return
+	}
+
+	var req domain.ChangePasswordInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ResponseValidator(c, validation.HandleValidationErrors(err))
+		return
+	}
+
+	err := ah.auth_service.ChangePassword(userID, req.OldPassword, req.NewPassword)
+	if err != nil {
+		err.Export(c)
+		return
+	}
+
+	ctxJSON := gin.H{
+		"message": "Đổi mật khẩu thành công!",
+	}
+	c.JSON(http.StatusOK, ctxJSON)
+}

@@ -26,15 +26,10 @@ func (ur *AuthRoutes) Register(r *gin.RouterGroup) {
 	protected := auth.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
-		// protected.POST("/password/change", ur.handler.ChangePassword)
+		protected.POST("/password/change", ur.handler.ChangePassword)
 		protected.POST("/totp/setup", ur.handler.SetupTOTP)
 		protected.POST("/totp/verify", ur.handler.VerifyTOTP)
-		// protected.POST("/totp/disable", ur.handler.DisableTOTP)
+		protected.POST("/totp/disable", ur.handler.DisableTOTP)
 		protected.POST("/logout", ur.handler.Logout)
 	}
-	// user := r.Group("/user")
-	// user.Use(middleware.AuthMiddleware())
-	// {
-	// 	user.GET("", ur.handler.GetUserData)
-	// }
 }

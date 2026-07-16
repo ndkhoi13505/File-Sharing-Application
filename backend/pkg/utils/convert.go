@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	matchFirstCap = regexp.MustCompile("(.)[A-Z][a-z]+")
+	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 )
 
