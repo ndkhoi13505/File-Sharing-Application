@@ -7,7 +7,6 @@ import (
 	"log"
 	"mime/multipart"
 	"slices"
-
 	"time"
 
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
@@ -15,7 +14,6 @@ import (
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
-
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -23,20 +21,20 @@ import (
 )
 
 type fileService struct {
-	cfg        *config.Config
-	fileRepo   repository.FileRepository
-	sharedRepo repository.SharedRepository
-	userRepo   repository.UserRepository // Cần để tìm User ID từ Email
-	storage    storage.Storage
+	cfg			*config.Config
+	fileRepo	repository.FileRepository
+	sharedRepo	repository.SharedRepository
+	userRepo	repository.UserRepository
+	storage		storage.Storage
 }
 
 func NewFileService(cfg *config.Config, fr repository.FileRepository, sr repository.SharedRepository, ur repository.UserRepository, s storage.Storage) FileService {
 	return &fileService{
-		cfg:        cfg,
-		fileRepo:   fr,
-		sharedRepo: sr,
-		userRepo:   ur,
-		storage:    s,
+		cfg:		cfg,
+		fileRepo:	fr,
+		sharedRepo:	sr,
+		userRepo:	ur,
+		storage:	s,
 	}
 }
 
@@ -114,21 +112,20 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 
 	storageFileName := fileUUID
 	newFile := &domain.File{
-		Id:            fileUUID,
-		OwnerId:       ownerID,
-		FileName:      fileHeader.Filename,
-		StorageName:   storageFileName, // Tên file trên ổ đĩa sẽ là UUID
-		FileSize:      fileHeader.Size,
-		MimeType:      fileHeader.Header.Get("Content-Type"),
-		ShareToken:    shareToken,
-		IsPublic:      req.IsPublic || ownerID == nil, // buộc file là public khi không xác định được owner.
-		HasPassword:   passwordHash != nil,
-		PasswordHash:  passwordHash,
-		EnableTOTP:    req.EnableTOTP,
-		AvailableFrom: availableFrom,
-		AvailableTo:   availableTo,
-		ValidityDays:  validityDays,
-		CreatedAt:     time.Now().UTC(),
+		Id:				fileUUID,
+		OwnerId:		ownerID,
+		FileName:		fileHeader.Filename,
+		StorageName:	storageFileName, // Tên file trên thiết bị lưu trữ vật lý là UUID của file
+		FileSize:		fileHeader.Size,
+		MimeType:		fileHeader.Header.Get("Content-Type"),
+		ShareToken:		shareToken,
+		IsPublic:		req.IsPublic || ownerID == nil, // File phải public khi được upload ẩn danh
+		HasPassword:	passwordHash != nil,
+		PasswordHash:	passwordHash,
+		AvailableFrom:	availableFrom,
+		AvailableTo:	availableTo,
+		ValidityDays:	validityDays,
+		CreatedAt:		time.Now().UTC(),
 	}
 
 	// 3. Lưu file vật lý
@@ -163,7 +160,7 @@ func (s *fileService) GetMyFiles(ctx context.Context, userID string, params doma
 		// Trong trường hợp này, ta sẽ trả về lỗi
 		return nil, err
 	}
-	totalFiles, err := s.fileRepo.GetTotalUserFiles(ctx, userID)
+	totalFiles, err := s.fileRepo.GetTotalUserFiles(ctx, userID, params.Search)
 	if err.IsErr() {
 		return nil, err
 	}

@@ -126,6 +126,7 @@ func (fh *FileHandler) GetMyFiles(ctx *gin.Context) {
 	limit := utils.GetIntQuery(ctx, "limit", 20)
 	sortBy := ctx.DefaultQuery("sortBy", "createdAt")
 	order := ctx.DefaultQuery("order", "desc")
+	search := ctx.Query("q")
 
 	params := domain.ListFileParams{
 		Status: strings.ToLower(status),
@@ -133,6 +134,7 @@ func (fh *FileHandler) GetMyFiles(ctx *gin.Context) {
 		Limit:  limit,
 		SortBy: sortBy,
 		Order:  strings.ToLower(order),
+		Search: strings.TrimSpace(search),
 	}
 
 	result, err := fh.file_service.GetMyFiles(ctx, userID.(string), params)

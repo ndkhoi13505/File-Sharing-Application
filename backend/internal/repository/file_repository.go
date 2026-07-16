@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -19,7 +18,7 @@ type FileRepository interface {
 	GetFileByToken(ctx context.Context, token string) (*domain.File, *utils.ReturnStatus)
 	DeleteFile(ctx context.Context, id string) *utils.ReturnStatus
 	GetMyFiles(ctx context.Context, userID string, params domain.ListFileParams) ([]domain.File, *utils.ReturnStatus)
-	GetTotalUserFiles(ctx context.Context, userID string) (int, *utils.ReturnStatus)
+	GetTotalUserFiles(ctx context.Context, userID string, search string) (int, *utils.ReturnStatus)
 	GetFileSummary(ctx context.Context, userID string) (*domain.FileSummary, *utils.ReturnStatus)
 	FindAll(ctx context.Context) ([]domain.File, *utils.ReturnStatus)
 	RegisterDownload(ctx context.Context, fileID string, userID string) *utils.ReturnStatus
@@ -45,36 +44,34 @@ func (r *fileRepository) CreateFile(ctx context.Context, file *domain.File) (*do
 		userID = nil // Anonymous Upload
 	}
 
-	// Cột 'password' trong DB cho phép NULL
 	var passwordHash any
 	if file.PasswordHash != nil {
 		passwordHash = *file.PasswordHash
 	} else {
-		passwordHash = nil
+		passwordHash = nil // File ko có password
 	}
 
 	query := `
 		INSERT INTO files (
 			id, user_id, name, type, size, password,
-			available_from, available_to, enable_totp,
+			available_from, available_to,
 			share_token, created_at, is_public
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 		) RETURNING id, created_at
 	`
 	err := r.db.QueryRowContext(ctx, query,
 		file.Id,
-		userID,             // $2: user_id (UUID hoặc NULL)
-		file.FileName,      // $3: name
-		file.MimeType,      // $4: type
-		file.FileSize,      // $5: size
-		passwordHash,       // $6: password (TEXT hoặc NULL)
-		file.AvailableFrom, // $7: available_from
-		file.AvailableTo,   // $8: available_to
-		file.EnableTOTP,    // $9: enable_totp
-		file.ShareToken,    // $10: share_token
-		file.CreatedAt,     // $11: created_at,
-		file.IsPublic,      // $12: is_public,
+		userID,				// $2: user_id
+		file.FileName,		// $3: name
+		file.MimeType,		// $4: type
+		file.FileSize,		// $5: size
+		passwordHash,		// $6: password
+		file.AvailableFrom,	// $7: available_from
+		file.AvailableTo,	// $8: available_to
+		file.ShareToken,	// $9: share_token
+		file.CreatedAt,		// $10: created_at,
+		file.IsPublic,		// $11: is_public,
 	).Scan(&file.Id, &file.CreatedAt)
 
 	if err != nil {
@@ -92,13 +89,12 @@ func (r *fileRepository) GetFileByID(ctx context.Context, id string) (*domain.Fi
 	query := `
 		SELECT
 			id, user_id, name, type, size, share_token,
-			password, available_from, available_to, enable_totp, created_at, is_public
+			password, available_from, available_to, created_at, is_public
 		FROM files
 		WHERE id = $1
 	`
 
 	var file domain.File
-
 	var ownerID sql.NullString
 	var passwordHash sql.NullString
 
@@ -114,14 +110,13 @@ func (r *fileRepository) GetFileByID(ctx context.Context, id string) (*domain.Fi
 		&passwordHash,
 		&file.AvailableFrom,
 		&file.AvailableTo,
-		&file.EnableTOTP,
 		&file.CreatedAt,
 		&file.IsPublic,
 	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, utils.Response(utils.ErrCodeFileNotFound)
+			return nil, utils.ResponseMsg(utils.ErrCodeFileNotFound, err.Error())
 		}
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
@@ -147,7 +142,7 @@ func (r *fileRepository) GetFileByToken(ctx context.Context, token string) (*dom
 	query := `
 		SELECT
 			id, user_id, name, type, size, share_token,
-			password, available_from, available_to, enable_totp,
+			password, available_from, available_to,
 			created_at, is_public
 		FROM files
 		WHERE share_token = $1
@@ -169,14 +164,13 @@ func (r *fileRepository) GetFileByToken(ctx context.Context, token string) (*dom
 		&passwordHash,
 		&file.AvailableFrom,
 		&file.AvailableTo,
-		&file.EnableTOTP,
 		&file.CreatedAt,
 		&file.IsPublic,
 	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, utils.Response(utils.ErrCodeFileNotFound)
+			return nil, utils.ResponseMsg(utils.ErrCodeFileNotFound, err.Error())
 		}
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
@@ -226,18 +220,24 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 	baseQuery := `
 		SELECT
 			id, user_id, name, type, size, share_token,
-			available_from, available_to, enable_totp, created_at, is_public
+			available_from, available_to, created_at, is_public
 		FROM files
 		WHERE user_id = $1
 	`
 	args := []any{userID}
 	query := baseQuery
-	argCounter := 2
+	argCounter := 2 // Trỏ tới tham số tiếp theo (bắt đầu bằng $2)
 
+	// Lọc theo từ khóa tìm kiếm (Search) nếu có truyền lên
+	if params.Search != "" {
+		query += fmt.Sprintf(" AND name ILIKE $%d", argCounter)
+		args = append(args, "%"+params.Search+"%")
+		argCounter++
+	}
+
+	// 2. Lọc theo trạng thái (Status)
 	if strings.ToLower(params.Status) != "all" {
 		status := strings.ToLower(params.Status)
-
-		argCounter++
 
 		switch status {
 		case "active":
@@ -264,9 +264,9 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 	query += fmt.Sprintf(" ORDER BY %s %s", safeSortBy, safeOrder)
 
 	// 4. Thêm phân trang (Pagination)
-	offset := (params.Page - 1) * params.Limit
-	query += " LIMIT $2 OFFSET $3"
-	args = append(args, int64(params.Limit), int64(offset))
+	// Đảm bảo số thứ tự tham số ($) động chính xác
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCounter, argCounter+1)
+	args = append(args, int64(params.Limit), int64((params.Page-1)*params.Limit))
 
 	// 5. Thực thi truy vấn
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -280,11 +280,11 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 	var files []domain.File
 	for rows.Next() {
 		var f domain.File
-		var ownerID sql.NullString // Cần để scan user_id
+		var ownerID sql.NullString
 
 		err := rows.Scan(
 			&f.Id, &ownerID, &f.FileName, &f.MimeType, &f.FileSize, &f.ShareToken,
-			&f.AvailableFrom, &f.AvailableTo, &f.EnableTOTP, &f.CreatedAt,
+			&f.AvailableFrom, &f.AvailableTo, &f.CreatedAt,
 			&f.IsPublic,
 		)
 
@@ -292,7 +292,6 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 			return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
 
-		// Gán giá trị sau khi scan
 		if ownerID.Valid {
 			f.OwnerId = &ownerID.String
 		}
@@ -310,12 +309,18 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 
 	return files, nil
 }
-func (r *fileRepository) GetTotalUserFiles(ctx context.Context, userID string) (int, *utils.ReturnStatus) {
+
+func (r *fileRepository) GetTotalUserFiles(ctx context.Context, userID string, search string) (int, *utils.ReturnStatus) {
 	var total int
-
 	query := `SELECT COUNT(id) FROM files WHERE user_id = $1`
+	args := []any{userID}
 
-	err := r.db.QueryRowContext(ctx, query, userID).Scan(&total)
+	if search != "" {
+		query += " AND name ILIKE $2"
+		args = append(args, "%"+search+"%")
+	}
+
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&total)
 	if err != nil {
 		return 0, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
@@ -331,7 +336,7 @@ func (r *fileRepository) GetFileSummary(ctx context.Context, userID string) (*do
           AND available_from <= NOW()
           AND available_to > NOW()
     `
-	err := r.db.QueryRowContext(ctx, activeQuery, userID).Scan(&summary.ActiveFiles) // Chỉ truyền $1
+	err := r.db.QueryRowContext(ctx, activeQuery, userID).Scan(&summary.ActiveFiles)
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
@@ -341,18 +346,17 @@ func (r *fileRepository) GetFileSummary(ctx context.Context, userID string) (*do
         WHERE user_id = $1
           AND available_from > NOW()
     `
-	err = r.db.QueryRowContext(ctx, pendingQuery, userID).Scan(&summary.PendingFiles) // Chỉ truyền $1
+	err = r.db.QueryRowContext(ctx, pendingQuery, userID).Scan(&summary.PendingFiles)
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
-	// 3. Tính Expired Files (Đã hết hiệu lực: NOW >= available_to)
 	expiredQuery := `
         SELECT COUNT(id) FROM files
         WHERE user_id = $1
           AND available_to <= NOW()
     `
-	err = r.db.QueryRowContext(ctx, expiredQuery, userID).Scan(&summary.ExpiredFiles) // Chỉ truyền $1
+	err = r.db.QueryRowContext(ctx, expiredQuery, userID).Scan(&summary.ExpiredFiles)
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
@@ -364,7 +368,7 @@ func (r *fileRepository) FindAll(ctx context.Context) ([]domain.File, *utils.Ret
 	query := `
         SELECT
             id, user_id, name, type, size, share_token,
-            password, available_from, available_to, enable_totp, created_at, is_public
+            password, available_from, available_to, created_at, is_public
         FROM files
         ORDER BY created_at DESC
     `
@@ -388,10 +392,9 @@ func (r *fileRepository) FindAll(ctx context.Context) ([]domain.File, *utils.Ret
 			&f.MimeType,
 			&f.FileSize,
 			&f.ShareToken,
-			&passwordHash, // Cần password để xác định HasPassword
+			&passwordHash,
 			&f.AvailableFrom,
 			&f.AvailableTo,
-			&f.EnableTOTP,
 			&f.CreatedAt,
 			&f.IsPublic,
 		)
@@ -400,7 +403,6 @@ func (r *fileRepository) FindAll(ctx context.Context) ([]domain.File, *utils.Ret
 			return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
 
-		// Gán giá trị sau khi scan
 		if ownerID.Valid {
 			f.OwnerId = &ownerID.String
 		} else {
@@ -438,7 +440,6 @@ func (r *fileRepository) RegisterDownload(ctx context.Context, fileID string, us
 func (r *fileRepository) GetFileDownloadHistory(ctx context.Context, fileID string) (*domain.FileDownloadHistory, *utils.ReturnStatus) {
 	file, err := r.GetFileByID(ctx, fileID)
 	if err != nil {
-		log.Println("File retrieval failure")
 		return nil, err
 	}
 
@@ -448,7 +449,6 @@ func (r *fileRepository) GetFileDownloadHistory(ctx context.Context, fileID stri
 
 	rows, derr := r.db.QueryContext(ctx, `SELECT download_id, user_id, time FROM download WHERE file_id = $1`, file.Id)
 	if derr != nil {
-		log.Println("Download retrieval failure")
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, derr.Error())
 	}
 
@@ -457,7 +457,6 @@ func (r *fileRepository) GetFileDownloadHistory(ctx context.Context, fileID stri
 		var d_id string
 		var u_id *string
 		if err := rows.Scan(&d_id, &u_id, &time); err != nil {
-			log.Println("Row scan failure")
 			return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
 
@@ -498,19 +497,18 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 
 	err := row.Scan(
 		&stat.FileId,
-		&ownerID, // Hứng vào NullString
+		&ownerID,
 		&stat.FileName,
 		&stat.TotalDownloadCount,
 		&stat.UserDownloadCount,
 		&stat.CreatedAt,
-		&lastDownloadTime, // Hứng vào NullTime
+		&lastDownloadTime,
 	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, utils.Response(utils.ErrCodeFileNotFound)
+			return nil, utils.ResponseMsg(utils.ErrCodeFileNotFound, err.Error())
 		}
-		fmt.Println("DB Error:", err)
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
@@ -522,7 +520,6 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 }
 
 func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
-	// Sử dụng tham số động $2 cho điều kiện SEARCH nếu có
     query := `
         SELECT DISTINCT f.id
         FROM files f JOIN shared s ON f.id = s.file_id
@@ -532,16 +529,15 @@ func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, 
     `
     args := []any{userID}
 
-    // Nếu client có truyền từ khóa tìm kiếm
     if search != "" {
         query += " AND f.name ILIKE $2"
-        args = append(args, "%"+search+"%") // Tìm kiếm chứa chuỗi (CONTAINS)
+        args = append(args, "%"+search+"%")
     }
 
     var rows *sql.Rows = nil
     var err error = nil
 
-    rows, err = r.db.QueryContext(ctx, query, args...) // Truyền cụm args động vào
+    rows, err = r.db.QueryContext(ctx, query, args...)
 
     if err != nil {
         return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())

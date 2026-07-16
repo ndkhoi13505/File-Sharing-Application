@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS files (
     created_at TIMESTAMPTZ DEFAULT now(),
     available_from TIMESTAMPTZ,
     available_to TIMESTAMPTZ,
-    enable_totp BOOLEAN DEFAULT false,
     share_token TEXT,
     CONSTRAINT files_password_check CHECK (length(password) >= 6),
     CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -69,14 +68,17 @@ CREATE PROCEDURE proc_download(f_id UUID, u_id UUID)
 LANGUAGE SQL
 AS $$
     UPDATE filestat 
-    SET 
-        download_count = download_count + 1
+    SET download_count = download_count + 1 
     WHERE file_id = f_id;
 
     UPDATE filestat
-    SET
-        user_download_count = user_download_count + 1
-    WHERE file_id = f_id AND NOT EXISTS (SELECT 1 FROM download WHERE user_id = u_id AND file_id = f_id);
+    SET user_download_count = user_download_count + 1 
+    WHERE file_id = f_id AND u_id IS NOT NULL 
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM download 
+        WHERE download.user_id = u_id AND download.file_id = f_id
+    );
 
     INSERT INTO download (file_id, user_id) VALUES (f_id, u_id);
 $$;
