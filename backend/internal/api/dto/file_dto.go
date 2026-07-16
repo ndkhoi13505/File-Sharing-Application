@@ -12,9 +12,9 @@ type UploadRequest struct {
 }
 
 type AccessibleFile struct {
-	FileId		string  `json:"fileid"`
-	FileName	string  `json:"filename"`
-	OwnerEmail	*string `json:"owner"`
-	HasPassword	bool    `json:"haspassword"`
-	ShareToken	string  `json:"sharetoken"`
+	FileId		string	`json:"fileid"`
+	FileName	string	`json:"filename"`
+	OwnerEmail	*string	`json:"owner"`
+	HasPassword	bool	`json:"haspassword"`
+	ShareToken	string	`json:"sharetoken"`
 }

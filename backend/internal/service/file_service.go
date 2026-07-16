@@ -427,7 +427,7 @@ func (s *fileService) GetFileDownloadHistory(ctx context.Context, fileID string,
 	return history, nil
 }
 
-func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string) (*domain.FileStat, *utils.ReturnStatus) {
+func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string, userRole string) (*domain.FileStat, *utils.ReturnStatus) {
 	file, err := s.fileRepo.GetFileByID(ctx, fileID)
 	if err.IsErr() {
 		return nil, utils.Response(utils.ErrCodeFileStatNotFound)
@@ -438,14 +438,20 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string) (
 		return nil, err
 	}
 
-	if file.OwnerId == nil {
-		return nil, utils.Response(utils.ErrCodeFileStatNotFound)
-	}
-
 	isOwner := file.OwnerId != nil && *file.OwnerId == userID
 	isAdmin := requester.Role == "admin"
-	if !isAdmin && !isOwner {
-		return nil, utils.Response(utils.ErrCodeStatForbidden)
+
+	if file.OwnerId == nil {
+		if !isAdmin {
+			// Nếu KHÔNG PHẢI ADMIN gọi, báo lỗi không có quyền (hoặc không tìm thấy tùy bạn thiết kế)
+			return nil, utils.Response(utils.ErrCodeStatForbidden) 
+		}
+		// Nếu là Admin, bỏ qua block này để đi tiếp xuống dưới lấy stats!
+	} else {
+		// Nếu file CÓ chủ sở hữu, người yêu cầu bắt buộc phải là Owner hoặc Admin[cite: 6]
+		if !isAdmin && !isOwner {
+			return nil, utils.Response(utils.ErrCodeStatForbidden)
+		}
 	}
 
 	return s.fileRepo.GetFileStats(ctx, fileID)

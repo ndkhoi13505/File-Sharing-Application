@@ -11,6 +11,7 @@ import (
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/service"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -331,7 +332,15 @@ func (fh *FileHandler) GetFileStats(ctx *gin.Context) {
 		return
 	}
 
-	stats, err := fh.file_service.GetFileStats(ctx, fileID, userID.(string))
+	userClaims, existsClaims := ctx.Get("user")
+	var userRole string = ""
+	if existsClaims {
+		if claims, ok := userClaims.(*jwt.Claims); ok {
+			userRole = claims.Role
+		}
+	}
+
+	stats, err := fh.file_service.GetFileStats(ctx, fileID, userID.(string), userRole)
 	if err != nil {
 		err.Export(ctx)
 		return

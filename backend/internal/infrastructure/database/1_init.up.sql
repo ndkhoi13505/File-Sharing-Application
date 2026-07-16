@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID, -- Cho phép file anonymous upload.
+    user_id UUID,
     name VARCHAR(255) NOT NULL,
     password VARCHAR(255),
     type TEXT,
@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS files (
     available_from TIMESTAMPTZ,
     available_to TIMESTAMPTZ,
     share_token TEXT,
-    CONSTRAINT files_password_check CHECK (length(password) >= 6),
     CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -84,9 +83,9 @@ AS $$
 $$;
 
 -- =========================================================================
--- Admin username: admin
--- Admin email: admin@filesharing.com
--- Admin password: Admin@123
+-- Admin username:  admin
+-- Admin email:     admin@filesharing.com
+-- Admin password:  Admin@123
 -- =========================================================================
 
 INSERT INTO users (username, password, email, role, enableTOTP, secretTOTP)
