@@ -47,4 +47,5 @@ type AdminService interface {
 	GetSystemPolicy(ctx context.Context) (*config.SystemPolicy, *utils.ReturnStatus)
 	UpdateSystemPolicy(ctx context.Context, updates map[string]any) (*config.SystemPolicy, *utils.ReturnStatus)
 	CleanupExpiredFiles(ctx context.Context) (int, *utils.ReturnStatus)
+	GetAllFiles(ctx context.Context, params domain.ListFileParams) (interface{}, *utils.ReturnStatus)
 }

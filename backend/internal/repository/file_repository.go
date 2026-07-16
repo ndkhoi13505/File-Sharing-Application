@@ -25,6 +25,7 @@ type FileRepository interface {
 	GetFileDownloadHistory(ctx context.Context, fileID string) (*domain.FileDownloadHistory, *utils.ReturnStatus)
 	GetFileStats(ctx context.Context, fileID string) (*domain.FileStat, *utils.ReturnStatus)
 	GetAccessibleFiles(ctx context.Context, userIDop string, search string) ([]domain.File, *utils.ReturnStatus)
+	GetAllFiles(ctx context.Context, params domain.ListFileParams) ([]domain.File, int, *utils.ReturnStatus)
 }
 
 type fileRepository struct {
@@ -561,4 +562,118 @@ func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, 
     }
 
     return out, nil
+}
+
+func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFileParams) ([]domain.File, int, *utils.ReturnStatus) {
+	var totalRecords int
+	countQuery := "SELECT COUNT(id) FROM files WHERE 1=1" // Dùng WHERE 1=1 để dễ nối chuỗi "AND" phía sau
+	countArgs := []any{}
+	argCounter := 1
+
+	if params.Search != "" {
+		countQuery += fmt.Sprintf(" AND name ILIKE $%d", argCounter)
+		countArgs = append(countArgs, "%"+params.Search+"%")
+		argCounter++
+	}
+
+	// Lọc theo Status (Active / Pending / Expired)
+	if strings.ToLower(params.Status) != "all" {
+		switch strings.ToLower(params.Status) {
+		case "active":
+			countQuery += " AND available_from <= NOW() AND available_to > NOW()"
+		case "pending":
+			countQuery += " AND available_from > NOW()"
+		case "expired":
+			countQuery += " AND available_to <= NOW()"
+		}
+	}
+
+	err := r.db.QueryRowContext(ctx, countQuery, countArgs...).Scan(&totalRecords)
+	if err != nil {
+		return nil, 0, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
+	}
+
+	selectQuery := `
+		SELECT 
+			id, user_id, name, type, size, share_token, 
+			available_from, available_to, created_at, is_public
+		FROM files
+		WHERE 1=1
+	`
+	selectArgs := []any{}
+	argCounter = 1 // Reset lại counter cho query mới
+
+	if params.Search != "" {
+		selectQuery += fmt.Sprintf(" AND name ILIKE $%d", argCounter)
+		selectArgs = append(selectArgs, "%"+params.Search+"%")
+		argCounter++
+	}
+
+	if strings.ToLower(params.Status) != "all" {
+		switch strings.ToLower(params.Status) {
+		case "active":
+			selectQuery += " AND available_from <= NOW() AND available_to > NOW()"
+		case "pending":
+			selectQuery += " AND available_from > NOW()"
+		case "expired":
+			selectQuery += " AND available_to <= NOW()"
+		}
+	}
+
+	var safeSortBy string
+
+	switch params.SortBy {
+	case "fileName":
+		safeSortBy = "name"
+	case "fileSize":
+		safeSortBy = "size"
+	default:
+		safeSortBy = "created_at"
+	}
+	
+	safeOrder := "DESC"
+	if strings.ToLower(params.Order) == "asc" {
+		safeOrder = "ASC"
+	}
+
+	selectQuery += fmt.Sprintf(" ORDER BY %s %s", safeSortBy, safeOrder)
+	selectQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCounter, argCounter+1)
+	selectArgs = append(selectArgs, int64(params.Limit), int64((params.Page-1)*params.Limit))
+
+	rows, err := r.db.QueryContext(ctx, selectQuery, selectArgs...)
+	if err != nil {
+		return nil, 0, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
+	}
+	defer rows.Close()
+
+	var files []domain.File
+	now := time.Now()
+
+	for rows.Next() {
+		var f domain.File
+		var ownerID sql.NullString
+
+		err := rows.Scan(
+			&f.Id, &ownerID, &f.FileName, &f.MimeType, &f.FileSize, &f.ShareToken,
+			&f.AvailableFrom, &f.AvailableTo, &f.CreatedAt, &f.IsPublic,
+		)
+		if err != nil {
+			return nil, 0, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
+		}
+
+		if ownerID.Valid {
+			f.OwnerId = &ownerID.String
+		}
+
+		f.Status = "active"
+		if now.Before(f.AvailableFrom) {
+			f.Status = "pending"
+		} else if now.After(f.AvailableTo) {
+			f.Status = "expired"
+		}
+
+		files = append(files, f)
+	}
+
+	return files, totalRecords, nil
 }

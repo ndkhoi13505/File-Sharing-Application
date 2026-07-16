@@ -8,21 +8,22 @@ import (
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
-
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
+	"github.com/gin-gonic/gin"
 )
 
 type adminService struct {
-	cfg      *config.Config            // Lưu tham chiếu đến cấu hình
-	fileRepo repository.FileRepository // <-- THÊM: Để truy vấn file
-	storage  storage.Storage           // <-- THÊM: Để xóa file vật lý
+	cfg			*config.Config
+	fileRepo	repository.FileRepository
+	storage		storage.Storage
 }
 
 func NewAdminService(cfg *config.Config, fr repository.FileRepository, s storage.Storage) AdminService {
 	return &adminService{
-		cfg:      cfg,
-		fileRepo: fr,
-		storage:  s,
+		cfg:		cfg,
+		fileRepo:	fr,
+		storage:	s,
 	}
 }
 
@@ -105,7 +106,7 @@ func (s *adminService) UpdateSystemPolicy(ctx context.Context, updates map[strin
 			if v < 0 {
 				return nil, utils.ResponseMsg(utils.ErrCodeBadRequest, "Password length cannot be negative")
 			}
-			if v > 128 { // Ví dụ: Mật khẩu quá dài không cần thiết
+			if v > 128 {
 				return nil, utils.ResponseMsg(utils.ErrCodeBadRequest, "Password min length cannot exceed 128 characters")
 			}
 			currentPolicy.RequirePasswordMinLength = v
@@ -122,7 +123,6 @@ func (s *adminService) UpdateSystemPolicy(ctx context.Context, updates map[strin
 }
 
 func (s *adminService) CleanupExpiredFiles(ctx context.Context) (int, *utils.ReturnStatus) {
-	// Giả định FileRepository có hàm FindAll để lấy TẤT CẢ files
 	files, err := s.fileRepo.FindAll(ctx)
 	if err.IsErr() {
 		return 0, err
@@ -143,8 +143,8 @@ func (s *adminService) CleanupExpiredFiles(ctx context.Context) (int, *utils.Ret
 			}
 
 			if err := s.fileRepo.DeleteFile(ctx, file.Id); err.IsErr() {
-				// Log lỗi nhưng tiếp tục
-				log.Printf("Cleanup Error: Failed to delete metadata for file %s: %v", file.Id, err)
+				// Log lỗi nhưng tiếp tục sang file tiếp theo
+				log.Printf("Cleanup Error: Failed to delete metadata for file %s: %v, ignoring...", file.Id, err)
 				continue
 			}
 
@@ -153,4 +153,45 @@ func (s *adminService) CleanupExpiredFiles(ctx context.Context) (int, *utils.Ret
 	}
 
 	return deletedCount, nil
+}
+
+func (s *adminService) GetAllFiles(ctx context.Context, params domain.ListFileParams) (interface{}, *utils.ReturnStatus) {
+	files, totalFiles, err := s.fileRepo.GetAllFiles(ctx, params)
+	if err.IsErr() {
+		return nil, err
+	}
+
+	totalPages := 0
+	if params.Limit > 0 {
+		totalPages = (totalFiles + params.Limit - 1) / params.Limit
+	}
+
+	pagination := gin.H{
+		"currentPage":	params.Page,
+		"totalPages":	totalPages,
+		"totalFiles":	totalFiles,
+		"limit":		params.Limit,
+	}
+
+	out := []gin.H{}
+	for _, f := range files {
+		out = append(out, gin.H{
+			"id":				f.Id,
+			"fileName":			f.FileName,
+			"mimeType":			f.MimeType,
+			"fileSize":			f.FileSize,
+			"shareToken":		f.ShareToken,
+			"ownerId":			f.OwnerId,
+			"isPublic":			f.IsPublic,
+			"status":			f.Status,
+			"availableFrom":	f.AvailableFrom,
+			"availableTo":		f.AvailableTo,
+			"createdAt":		f.CreatedAt,
+		})
+	}
+
+	return gin.H{
+		"files":      out,
+		"pagination": pagination,
+	}, nil
 }
