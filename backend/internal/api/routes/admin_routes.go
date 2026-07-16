@@ -17,15 +17,13 @@ func NewAdminRoutes(handler *handlers.AdminHandler) *AdminRoutes {
 }
 
 func (ar *AdminRoutes) Register(r *gin.RouterGroup) {
+	r.GET("/admin/policy", ar.handler.GetSystemPolicy)
 	admin := r.Group("/admin")
 	{
 		admin.Use(middleware.AuthMiddleware())
 		admin.Use(middleware.AdminAuthMiddleware())
-		// Cần có middleware kiểm tra quyền Admin tại đây
-		admin.GET("/policy", ar.handler.GetSystemPolicy)      // Lấy cấu hình hệ thống
-		admin.PATCH("/policy", ar.handler.UpdateSystemPolicy) // Cập nhật cấu hình hệ thống
 
-		// Cleanup có thể là protected route cho admin/cron job
-		admin.POST("/cleanup", ar.handler.CleanupExpiredFiles) // Xóa file hết hạn
+		admin.PATCH("/policy", ar.handler.UpdateSystemPolicy)
+		admin.POST("/cleanup", ar.handler.CleanupExpiredFiles)
 	}
 }

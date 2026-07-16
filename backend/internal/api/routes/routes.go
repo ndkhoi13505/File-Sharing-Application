@@ -29,6 +29,8 @@ func RegisterRoutes(r *gin.Engine, authService jwt.TokenService, authRepo reposi
 			route.Register(api)
 		case *FileRoutes:
 			route.Register(api)
+		case *AdminRoutes:
+			route.Register(api)
 		default:
 			route.Register(protected)
 		}
@@ -37,7 +39,7 @@ func RegisterRoutes(r *gin.Engine, authService jwt.TokenService, authRepo reposi
 	home := func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Welcome to File Sharing API",
-			"status":  "online",
+			"status": "Online",
 		})
 	}
 
