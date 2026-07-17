@@ -10,53 +10,52 @@ import (
 type ErrorCode string
 
 const (
-	ErrCodeBadRequest					ErrorCode = "BAD_REQUEST"
-	ErrCodeNotFound						ErrorCode = "NOT_FOUND"
-	ErrCodeConflict						ErrorCode = "CONFLICT"
-	ErrCodeInternal						ErrorCode = "INTERNAL_SERVER_ERROR"
-	ErrCodeUnauthorized					ErrorCode = "UNAUTHORIZED"
-	ErrCodeTooManyRequests				ErrorCode = "TOO_MANY_REQUESTS"
+	ErrCodeBadRequest      ErrorCode = "BAD_REQUEST"
+	ErrCodeNotFound        ErrorCode = "NOT_FOUND"
+	ErrCodeConflict        ErrorCode = "CONFLICT"
+	ErrCodeInternal        ErrorCode = "INTERNAL_SERVER_ERROR"
+	ErrCodeUnauthorized    ErrorCode = "UNAUTHORIZED"
+	ErrCodeTooManyRequests ErrorCode = "TOO_MANY_REQUESTS"
 
-	ErrCodeFileUploadRequired			ErrorCode = "File is required"
-	ErrCodeFileUploadPublicWithShared	ErrorCode = "Public files are not allowed to have a whitelist"
-	ErrCodeFilePrivateNeedsAuth			ErrorCode = "Private uploads (isPublic=false/sharedWith) require authentication"
+	ErrCodeFileUploadRequired         ErrorCode = "File is required"
+	ErrCodeFileUploadPublicWithShared ErrorCode = "Public files are not allowed to have a whitelist"
+	ErrCodeFilePrivateNeedsAuth       ErrorCode = "Private uploads (isPublic=false/sharedWith) require authentication"
 
-	ErrCodeUserNotFound					ErrorCode = "User does not exist or invalid id/email"
-	ErrCodeLoginInvalid					ErrorCode = "Invalid email or password"
+	ErrCodeUserNotFound ErrorCode = "User does not exist or invalid id/email"
+	ErrCodeLoginInvalid ErrorCode = "Invalid email or password"
 
-	ErrCodeBearerInvalid				ErrorCode = "Invalid or missing authentication token"
-	ErrCodeDatabaseError				ErrorCode = "Error occured with the database"
-	ErrCodeFileNotFound					ErrorCode = "File not found"
+	ErrCodeBearerInvalid ErrorCode = "Invalid or missing authentication token"
+	ErrCodeDatabaseError ErrorCode = "Error occured with the database"
+	ErrCodeFileNotFound  ErrorCode = "File not found"
 
-	ErrCodeUploadBadRequest				ErrorCode = "Bad Upload request"
-	ErrCodeUploadPasswordTooShort		ErrorCode = "Password is too short"
-	ErrCodeUploadFileTooBig				ErrorCode = "File size exceeds the system limit"
-	ErrCodeFileExpired					ErrorCode = "File has expired"
+	ErrCodeUploadBadRequest       ErrorCode = "Bad Upload request"
+	ErrCodeUploadPasswordTooShort ErrorCode = "Password is too short"
+	ErrCodeUploadFileTooBig       ErrorCode = "File size exceeds the system limit"
+	ErrCodeFileExpired            ErrorCode = "File has expired"
 
-	ErrCodeDeleteValidationErr			ErrorCode = "You do not have permission to delete this file"
+	ErrCodeDeleteValidationErr ErrorCode = "You do not have permission to delete this file"
 
-	ErrCodeGetForbidden					ErrorCode = "You do not have permission to access this file"
-	ErrCodeUploadBearerRequired			ErrorCode = "Bearer token is required for authenticated uploads"
+	ErrCodeGetForbidden         ErrorCode = "You do not have permission to access this file"
+	ErrCodeUploadBearerRequired ErrorCode = "Bearer token is required for authenticated uploads"
 
-	ErrCodeDownloadBearerRequired		ErrorCode = "This file requires authentication. Please provide a Bearer token"
-	ErrCodeDownloadPasswordInvalid		ErrorCode = "The file's password is incorrect"
-	ErrCodeFileLocked					ErrorCode = "File not yet available"
+	ErrCodeDownloadBearerRequired  ErrorCode = "This file requires authentication. Please provide a Bearer token"
+	ErrCodeDownloadPasswordInvalid ErrorCode = "The file's password is incorrect"
+	ErrCodeFileLocked              ErrorCode = "File not yet available"
 
-	ErrCodeStatForbidden				ErrorCode = "You do not have permission to view statistics for this file"
-	ErrCodeFileStatNotFound				ErrorCode = "File not found or statistics not available (anonymous upload)"
-	ErrCodeHistoryForbidden				ErrorCode = "You do not have permission to view download history for this file"
+	ErrCodeStatForbidden    ErrorCode = "You do not have permission to view statistics for this file"
+	ErrCodeFileStatNotFound ErrorCode = "File not found or statistics not available"
+	ErrCodeHistoryForbidden ErrorCode = "You do not have permission to view download history for this file"
 
-	ErrCodeAdminUnauthorized			ErrorCode = "X-Cron-Secret header is required"
-	ErrCodeCleanupNotAdmin				ErrorCode = "You do not have permission to perform cleanup"
-	ErrCodeCleanUpLimited				ErrorCode = "Cleanup endpoint is rate limited. Please try again later"
+	ErrCodeCleanupNotAdmin   ErrorCode = "You do not have permission to perform cleanup"
+	ErrCodeCleanUpLimited    ErrorCode = "Cleanup endpoint is rate limited. Please try again later"
 
-	ErrCodeCantAccessResource			ErrorCode = "You do not have permission to access this resource"
-	ErrCodeInvalidMaxMinValidDays		ErrorCode = "maxValidityDays must be greater than or equal to minValidityHours"
+	ErrCodeCantAccessResource     ErrorCode = "You do not have permission to access this resource"
+	ErrCodeInvalidMaxMinValidDays ErrorCode = "maxValidityDays must be greater than or equal to minValidityHours"
 )
 
 type ReturnStatus struct {
-	code	ErrorCode
-	args	map[string]any
+	code ErrorCode
+	args map[string]any
 }
 
 func (bee *ReturnStatus) Error() ErrorCode {
@@ -105,173 +104,168 @@ func (bee *ReturnStatus) Export(c *gin.Context) {
 	args := bee.args
 
 	switch code {
-		case ErrCodeFileUploadRequired:
-			c.JSON(400, gin.H{
-				"error":	"Validation error",
-				"message":	"File is required",
-			})
+	case ErrCodeFileUploadRequired:
+		c.JSON(400, gin.H{
+			"error":   "Validation error",
+			"message": "File is required",
+		})
 
-		case ErrCodeLoginInvalid:
-			c.JSON(401, gin.H{
-				"error":	"Unauthorized",
-				"message":	"Invalid email or password",
-			})
+	case ErrCodeLoginInvalid:
+		c.JSON(401, gin.H{
+			"error":   "Unauthorized",
+			"message": "Invalid email or password",
+		})
 
-		case ErrCodeUploadBadRequest, ErrCodeBadRequest:
-			out := gin.H{
-				"error":	"Bad request",
-			}
-			maps.Copy(out, args)
-			c.JSON(400, out)
-
-		case ErrCodeFilePrivateNeedsAuth:
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":	"Unauthorized",
-				"message":	"Private uploads (isPublic=false/sharedWith) require authentication",
-			})
-
-		case ErrCodeFileUploadPublicWithShared:
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":	"Bad request",
-				"message":	"Public files are not allowed to have a whitelist",
-			})
-
-		case ErrCodeUploadBearerRequired:
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error":	"Unauthorized",
-				"message":	"Bearer token is required for authenticated uploads",
-			})
-
-		case ErrCodeUploadFileTooBig:
-			c.JSON(413, gin.H{
-				"error":	"Payload too large",
-				"message":	"File size exceeds the system limit",
-			})
-
-		case ErrCodeBearerInvalid:
-			c.JSON(401, gin.H{
-				"error":	"Unauthorized",
-				"message":	"Invalid or missing authentication token",
-			})
-
-		case ErrCodeGetForbidden:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to access this file",
-			})
-
-		case ErrCodeFileNotFound:
-			c.JSON(404, gin.H{
-				"error":	"Not found",
-				"message":	"File not found",
-			})
-
-		case ErrCodeDeleteValidationErr:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to delete this file",
-			})
-
-		case ErrCodeStatForbidden:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to view statistics for this file",
-			})
-
-		case ErrCodeFileStatNotFound:
-			c.JSON(404, gin.H{
-				"error":	"Not found",
-				"message":	"File not found or statistics not available (anonymous upload)",
-			})
-
-		case ErrCodeHistoryForbidden:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to view download history for this file",
-			})
-
-		case ErrCodeFileExpired:
-			out := gin.H{
-				"error":	"File expired",
-			}
-			maps.Copy(out, args)
-			c.JSON(410, out)
-
-		case ErrCodeDownloadBearerRequired:
-			c.JSON(401, gin.H{
-				"error":	"Unauthorized",
-				"message":	"This file requires authentication. Please provide a Bearer token",
-			})
-
-		case ErrCodeDownloadPasswordInvalid:
-			c.JSON(403, gin.H{
-				"error":	"Incorrect password",
-				"message":	"The file password is incorrect",
-			})
-
-		case ErrCodeFileLocked:
-			out := gin.H{
-				"error":	"File not yet available",
-			}
-			maps.Copy(out, args)
-			c.JSON(423, out)
-
-		case ErrCodeAdminUnauthorized:
-			c.JSON(401, gin.H{
-				"error":	"Unauthorized",
-				"message":	"X-Cron-Secret header is required",
-			})
-
-		case ErrCodeCleanupNotAdmin:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to perform cleanup",
-			})
-
-		case ErrCodeCleanUpLimited:
-			c.JSON(429, gin.H{
-				"error":	"Too many requests",
-				"message":	"Cleanup endpoint is rate limited. Please try again later.",
-			})
-
-		case ErrCodeCantAccessResource:
-			c.JSON(403, gin.H{
-				"error":	"Forbidden",
-				"message":	"You do not have permission to access this resource",
-			})
-		case ErrCodeInvalidMaxMinValidDays:
-			c.JSON(401, gin.H{
-				"error":	"Validation error",
-				"message":	"maxValidityDays must be greater than or equal to minValidityHours",
-			})
-
-		case ErrCodeConflict:
-			out := gin.H{
-				"error":	"Conflict",
-			}
-			maps.Copy(out, args)
-			c.JSON(http.StatusConflict, out)
-
-		default:
-			out := gin.H{
-				"error":	"Internal Server Error",
-			}
-			maps.Copy(out, args)
-			c.JSON(500, out)
+	case ErrCodeUploadBadRequest, ErrCodeBadRequest:
+		out := gin.H{
+			"error": "Bad request",
 		}
+		maps.Copy(out, args)
+		c.JSON(400, out)
+
+	case ErrCodeFilePrivateNeedsAuth:
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Unauthorized",
+			"message": "Private uploads (isPublic=false/sharedWith) require authentication",
+		})
+
+	case ErrCodeFileUploadPublicWithShared:
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad request",
+			"message": "Public files are not allowed to have a whitelist",
+		})
+
+	case ErrCodeUploadBearerRequired:
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Bearer token is required for authenticated uploads",
+		})
+
+	case ErrCodeUploadFileTooBig:
+		c.JSON(413, gin.H{
+			"error":   "Payload too large",
+			"message": "File size exceeds the system limit",
+		})
+
+	case ErrCodeBearerInvalid:
+		c.JSON(401, gin.H{
+			"error":   "Unauthorized",
+			"message": "Invalid or missing authentication token",
+		})
+
+	case ErrCodeGetForbidden:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to access this file",
+		})
+
+	case ErrCodeFileNotFound:
+		c.JSON(404, gin.H{
+			"error":   "Not found",
+			"message": "File not found",
+		})
+
+	case ErrCodeDeleteValidationErr:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to delete this file",
+		})
+
+	case ErrCodeStatForbidden:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to view statistics for this file",
+		})
+
+	case ErrCodeFileStatNotFound:
+		c.JSON(404, gin.H{
+			"error":   "Not found",
+			"message": "File not found or statistics not available",
+		})
+
+	case ErrCodeHistoryForbidden:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to view download history for this file",
+		})
+
+	case ErrCodeFileExpired:
+		out := gin.H{
+			"error": "File expired",
+		}
+		maps.Copy(out, args)
+		c.JSON(410, out)
+
+	case ErrCodeDownloadBearerRequired:
+		c.JSON(401, gin.H{
+			"error":   "Unauthorized",
+			"message": "This file requires authentication. Please provide a Bearer token",
+		})
+
+	case ErrCodeDownloadPasswordInvalid:
+		c.JSON(403, gin.H{
+			"error":   "Incorrect password",
+			"message": "The file password is incorrect",
+		})
+
+	case ErrCodeFileLocked:
+		out := gin.H{
+			"error": "File not yet available",
+		}
+		maps.Copy(out, args)
+		c.JSON(423, out)
+
+	case ErrCodeCleanupNotAdmin:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to perform cleanup",
+		})
+
+	case ErrCodeCleanUpLimited:
+		c.JSON(429, gin.H{
+			"error":   "Too many requests",
+			"message": "Cleanup endpoint is rate limited. Please try again later.",
+		})
+
+	case ErrCodeCantAccessResource:
+		c.JSON(403, gin.H{
+			"error":   "Forbidden",
+			"message": "You do not have permission to access this resource",
+		})
+
+	case ErrCodeInvalidMaxMinValidDays:
+		c.JSON(401, gin.H{
+			"error":   "Validation error",
+			"message": "maxValidityDays must be greater than or equal to minValidityHours",
+		})
+
+	case ErrCodeConflict:
+		out := gin.H{
+			"error": "Conflict",
+		}
+		maps.Copy(out, args)
+		c.JSON(http.StatusConflict, out)
+
+	default:
+		out := gin.H{
+			"error": "Internal Server Error",
+		}
+		maps.Copy(out, args)
+		c.JSON(500, out)
+	}
 }
 
 type AppError struct {
-	Message	string
-	Code	ErrorCode
-	Err		error
+	Message string
+	Code    ErrorCode
+	Err     error
 }
 
 type APIResponse struct {
-	Status		string `json:"status"`
-	Message		string `json:"message,omitempty"`
-	Data		any    `json:"data,omitempty"`
-	Pagination	any    `json:"pagination,omitempty"`
+	Status     string `json:"status"`
+	Message    string `json:"message,omitempty"`
+	Data       any    `json:"data,omitempty"`
+	Pagination any    `json:"pagination,omitempty"`
 }
 
 func (ae *AppError) Error() string {
@@ -281,15 +275,15 @@ func (ae *AppError) Error() string {
 func NewError(message string, code ErrorCode) error {
 	return &AppError{
 		Message: message,
-		Code:	 code,
+		Code:    code,
 	}
 }
 
 func WrapError(err error, message string, code ErrorCode) error {
 	return &AppError{
-		Err:	 err,
+		Err:     err,
 		Message: message,
-		Code:	 code,
+		Code:    code,
 	}
 }
 
@@ -298,7 +292,7 @@ func ResponseError(ctx *gin.Context, err error) {
 		status := httpStatusFromCode(appErr.Code)
 		response := gin.H{
 			"error": CapitalizeFirst(appErr.Message),
-			"code":	 appErr.Code,
+			"code":  appErr.Code,
 		}
 
 		if appErr.Err != nil {
@@ -311,13 +305,13 @@ func ResponseError(ctx *gin.Context, err error) {
 
 	ctx.JSON(http.StatusInternalServerError, gin.H{
 		"error": err.Error(),
-		"code":	 ErrCodeInternal,
+		"code":  ErrCodeInternal,
 	})
 }
 
 func ResponseSuccess(ctx *gin.Context, status int, message string, data ...any) {
 	resp := APIResponse{
-		Status:	 "success",
+		Status:  "success",
 		Message: CapitalizeFirst(message),
 	}
 
