@@ -41,7 +41,7 @@ export type RegisterRequest = {
   username: string;
   email: string;
   password: string;
-//   role?: string; // Why allow users to register with role?
+  //   role?: string; // Why allow users to register with role?
 };
 
 export type RegisterSuccessResponse = {
@@ -196,17 +196,17 @@ export interface CleanupResponse {
 // }
 
 export interface FileInfo {
-    id: string;
-    fileName: string;
-    fileSize?: number;
-    mimeType?: string;
-    shareToken: string;
-    status: "active" | "pending" | "expired";
-    isPublic: boolean;
-    hasPassword: boolean;
-    availableFrom?: string;
-    availableTo?: string;
-    createdAt?: string;
+  id: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  shareToken: string;
+  status: "active" | "pending" | "expired";
+  isPublic: boolean;
+  hasPassword: boolean;
+  availableFrom?: string;
+  availableTo?: string;
+  createdAt?: string;
 }
 
 export interface AvailableFile {
