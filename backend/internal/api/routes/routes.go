@@ -1,10 +1,10 @@
 package routes
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/middleware"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
-	"github.com/gin-gonic/gin"
 )
 
 type Route interface {
@@ -39,7 +39,7 @@ func RegisterRoutes(r *gin.Engine, authService jwt.TokenService, authRepo reposi
 	home := func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Welcome to File Sharing API",
-			"status": "Online",
+			"status":  "Online",
 		})
 	}
 

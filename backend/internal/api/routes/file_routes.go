@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/handlers"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 type FileRoutes struct {

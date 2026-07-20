@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/handlers"
 	"github.com/gin-gonic/gin"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/handlers"
 )
 
 type UserRoutes struct {
