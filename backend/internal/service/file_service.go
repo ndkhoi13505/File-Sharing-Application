@@ -7,34 +7,35 @@ import (
 	"log"
 	"mime/multipart"
 	"slices"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/dto"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type fileService struct {
-	cfg			*config.Config
-	fileRepo	repository.FileRepository
-	sharedRepo	repository.SharedRepository
-	userRepo	repository.UserRepository
-	storage		storage.Storage
+	cfg        *config.Config
+	fileRepo   repository.FileRepository
+	sharedRepo repository.SharedRepository
+	userRepo   repository.UserRepository
+	storage    storage.Storage
 }
 
 func NewFileService(cfg *config.Config, fr repository.FileRepository, sr repository.SharedRepository, ur repository.UserRepository, s storage.Storage) FileService {
 	return &fileService{
-		cfg:		cfg,
-		fileRepo:	fr,
-		sharedRepo:	sr,
-		userRepo:	ur,
-		storage:	s,
+		cfg:        cfg,
+		fileRepo:   fr,
+		sharedRepo: sr,
+		userRepo:   ur,
+		storage:    s,
 	}
 }
 
@@ -96,6 +97,21 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 		return nil, err
 	}
 
+	if len(req.SharedWith) > 0 {
+		missingEmails, errStatus := s.userRepo.FindNonExistingEmails(req.SharedWith)
+		if errStatus != nil {
+			return nil, errStatus
+		}
+
+		// Nếu phát hiện có ít nhất 1 email chưa từng đăng ký tài khoản -> Trả lỗi báo Bad Request!
+		if len(missingEmails) > 0 {
+			return nil, utils.ResponseMsg(
+				utils.ErrCodeBadRequest,
+				fmt.Sprintf("Invalid email(s) or not found: %s", strings.Join(missingEmails, ", ")),
+			)
+		}
+	}
+
 	// 2. Chuẩn bị File Metadata
 	fileUUID := uuid.New().String()
 	shareToken := utils.GenerateRandomString(16) // Hàm tạo token ngẫu nhiên 16 ký tự
@@ -112,20 +128,20 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 
 	storageFileName := fileUUID
 	newFile := &domain.File{
-		Id:				fileUUID,
-		OwnerId:		ownerID,
-		FileName:		fileHeader.Filename,
-		StorageName:	storageFileName, // Tên file trên thiết bị lưu trữ vật lý là UUID của file
-		FileSize:		fileHeader.Size,
-		MimeType:		fileHeader.Header.Get("Content-Type"),
-		ShareToken:		shareToken,
-		IsPublic:		req.IsPublic || ownerID == nil, // File phải public khi được upload ẩn danh
-		HasPassword:	passwordHash != nil,
-		PasswordHash:	passwordHash,
-		AvailableFrom:	availableFrom,
-		AvailableTo:	availableTo,
-		ValidityDays:	validityDays,
-		CreatedAt:		time.Now().UTC(),
+		Id:            fileUUID,
+		OwnerId:       ownerID,
+		FileName:      fileHeader.Filename,
+		StorageName:   storageFileName, // Tên file trên thiết bị lưu trữ vật lý là UUID của file
+		FileSize:      fileHeader.Size,
+		MimeType:      fileHeader.Header.Get("Content-Type"),
+		ShareToken:    shareToken,
+		IsPublic:      req.IsPublic || ownerID == nil, // File phải public khi được upload ẩn danh
+		HasPassword:   passwordHash != nil,
+		PasswordHash:  passwordHash,
+		AvailableFrom: availableFrom,
+		AvailableTo:   availableTo,
+		ValidityDays:  validityDays,
+		CreatedAt:     time.Now().UTC(),
 	}
 
 	// 3. Lưu file vật lý
@@ -346,7 +362,7 @@ func (s *fileService) DownloadFile(ctx context.Context, token string, userID str
 
 	isOwner := fileInfo.OwnerId != nil && userID != "" && *fileInfo.OwnerId == userID
 
-	if fileInfo.HasPassword && !isOwner{
+	if fileInfo.HasPassword && !isOwner {
 		if password == "" {
 			return nil, nil, utils.Response(utils.ErrCodeDownloadPasswordInvalid)
 		}
@@ -444,7 +460,7 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string, u
 	if file.OwnerId == nil {
 		if !isAdmin {
 			// Nếu KHÔNG PHẢI ADMIN gọi, báo lỗi không có quyền (hoặc không tìm thấy tùy bạn thiết kế)
-			return nil, utils.Response(utils.ErrCodeStatForbidden) 
+			return nil, utils.Response(utils.ErrCodeStatForbidden)
 		}
 		// Nếu là Admin, bỏ qua block này để đi tiếp xuống dưới lấy stats!
 	} else {
@@ -459,33 +475,33 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string, u
 
 func (s *fileService) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]dto.AccessibleFile, *utils.ReturnStatus) {
 	// Truyền thêm tham số search vào Repo
-    files, err := s.fileRepo.GetAccessibleFiles(ctx, userID, search) 
+	files, err := s.fileRepo.GetAccessibleFiles(ctx, userID, search)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    var out []dto.AccessibleFile
+	var out []dto.AccessibleFile
 
-    for _, file := range files {
-        var user domain.User
-        var email *string
+	for _, file := range files {
+		var user domain.User
+		var email *string
 
-        if file.OwnerId != nil {
-            if err := s.userRepo.FindById(*file.OwnerId, &user); err != nil {
-                return nil, err
-            }
-            email = &user.Email
-        }
+		if file.OwnerId != nil {
+			if err := s.userRepo.FindById(*file.OwnerId, &user); err != nil {
+				return nil, err
+			}
+			email = &user.Email
+		}
 
-        out = append(out, dto.AccessibleFile{
-            FileId:      file.Id,
-            FileName:    file.FileName,
-            OwnerEmail:  email,
-            HasPassword: file.HasPassword,
-            ShareToken:  file.ShareToken,
-        })
-    }
+		out = append(out, dto.AccessibleFile{
+			FileId:      file.Id,
+			FileName:    file.FileName,
+			OwnerEmail:  email,
+			HasPassword: file.HasPassword,
+			ShareToken:  file.ShareToken,
+		})
+	}
 
-    return out, nil
+	return out, nil
 }

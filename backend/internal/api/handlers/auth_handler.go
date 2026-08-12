@@ -3,12 +3,12 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/service"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
-	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
@@ -313,7 +313,8 @@ func (ah *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	ctxJSON := gin.H{
-		"message": "Đổi mật khẩu thành công!",
+		"status":  "success",
+		"message": "Password changed successfully",
 	}
 	c.JSON(http.StatusOK, ctxJSON)
 }

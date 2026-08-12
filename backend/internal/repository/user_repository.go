@@ -2,7 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"strings"
 
+	"github.com/lib/pq"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 )
@@ -66,4 +68,46 @@ func (ur *SQLUserRepository) DeleteTimestamp(id string) *utils.ReturnStatus {
 	`, id)
 
 	return utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+}
+
+func (ur *SQLUserRepository) FindNonExistingEmails(emails []string) ([]string, *utils.ReturnStatus) {
+	if len(emails) == 0 {
+		return nil, nil
+	}
+
+	cleanEmails := make([]string, 0, len(emails))
+	for _, e := range emails {
+		trimmed := strings.ToLower(strings.TrimSpace(e))
+		if trimmed != "" {
+			cleanEmails = append(cleanEmails, trimmed)
+		}
+	}
+
+	if len(cleanEmails) == 0 {
+		return nil, nil
+	}
+
+	query := "SELECT LOWER(email) FROM users WHERE LOWER(email) = ANY($1)"
+	rows, err := ur.db.Query(query, pq.Array(cleanEmails))
+	if err != nil {
+		return nil, utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+	}
+	defer rows.Close()
+
+	existingMap := make(map[string]bool)
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err == nil {
+			existingMap[email] = true
+		}
+	}
+
+	var missingEmails []string
+	for _, email := range cleanEmails {
+		if !existingMap[email] {
+			missingEmails = append(missingEmails, email)
+		}
+	}
+
+	return missingEmails, nil
 }

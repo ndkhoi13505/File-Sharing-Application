@@ -32,10 +32,9 @@ func (fr *FileRoutes) Register(r *gin.RouterGroup) {
 	protected.Use(middleware.AuthMiddleware())
 	{
 		protected.GET("/available", fr.handler.GetAccessibleFiles)
-
 		protected.GET("/my", fr.handler.GetMyFiles)
 
-		// Sử dụng ID.
+		// Sử dụng ID
 		protected.DELETE("/info/:id", fr.handler.DeleteFile)
 		protected.GET("/info/:id", fr.handler.GetFileInfoVerbose)
 		protected.GET("/stats/:id", fr.handler.GetFileStats)

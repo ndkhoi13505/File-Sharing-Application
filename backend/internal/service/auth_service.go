@@ -209,7 +209,7 @@ func (as *authService) VerifyTOTP(userID string, code string) (bool, *utils.Retu
 
 	if valid {
 		if err := as.authRepo.EnableTOTP(userID); err != nil {
-			return true, utils.ResponseMsg(utils.ErrCodeInternal, fmt.Sprintf("verified but failed to enable status: %v", err))
+			return true, utils.ResponseMsg(utils.ErrCodeInternal, fmt.Sprintf("Verified but failed to enable status: %v", err))
 		}
 	}
 
@@ -251,18 +251,18 @@ func (as *authService) ChangePassword(userID string, oldPassword, newPassword st
 
 	// 2. So sánh mật khẩu cũ người dùng nhập với mật khẩu lưu trong DB
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
-		return utils.ResponseMsg(utils.ErrCodeBadRequest, "Mật khẩu cũ không chính xác")
+		return utils.ResponseMsg(utils.ErrCodeBadRequest, "The old password is incorrect")
 	}
 
 	// Kiểm tra xem mật khẩu mới có trùng mật khẩu cũ không (Tùy chọn bảo mật bổ sung)
 	if oldPassword == newPassword {
-		return utils.ResponseMsg(utils.ErrCodeBadRequest, "Mật khẩu mới không được trùng với mật khẩu cũ")
+		return utils.ResponseMsg(utils.ErrCodeBadRequest, "New password cannot be the same as the old password")
 	}
 
 	// 3. Tiến hành mã hóa mật khẩu mới
 	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return utils.ResponseMsg(utils.ErrCodeInternal, "Không thể mã hóa mật khẩu mới")
+		return utils.ResponseMsg(utils.ErrCodeInternal, "Failed to hash new password")
 	}
 
 	// 4. Lưu mật khẩu mới vào DB thông qua repo

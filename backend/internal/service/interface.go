@@ -5,11 +5,11 @@ import (
 	"io"
 	"mime/multipart"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/dto"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
-	"github.com/gin-gonic/gin"
 )
 
 type TOTPSetupResponse struct {

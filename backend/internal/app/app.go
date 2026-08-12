@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/routes"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/database"
@@ -12,8 +14,6 @@ import (
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 )
 
 type Module interface {
@@ -40,7 +40,7 @@ func (a *Application) DB() *sql.DB {
 }
 
 func NewApplication(cfg *config.Config) *Application {
-	
+
 	if err := validation.InitValidator(); err != nil {
 		log.Fatalf("failed to initialize custom validator: %v", err)
 	}

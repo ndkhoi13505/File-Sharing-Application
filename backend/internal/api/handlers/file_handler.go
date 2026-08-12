@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/dto"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/service"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type FileHandler struct {

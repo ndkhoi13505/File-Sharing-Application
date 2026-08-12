@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/service"
-	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {

@@ -63,16 +63,16 @@ func (r *fileRepository) CreateFile(ctx context.Context, file *domain.File) (*do
 	`
 	err := r.db.QueryRowContext(ctx, query,
 		file.Id,
-		userID,				// $2: user_id
-		file.FileName,		// $3: name
-		file.MimeType,		// $4: type
-		file.FileSize,		// $5: size
-		passwordHash,		// $6: password
-		file.AvailableFrom,	// $7: available_from
-		file.AvailableTo,	// $8: available_to
-		file.ShareToken,	// $9: share_token
-		file.CreatedAt,		// $10: created_at,
-		file.IsPublic,		// $11: is_public,
+		userID,             // $2: user_id
+		file.FileName,      // $3: name
+		file.MimeType,      // $4: type
+		file.FileSize,      // $5: size
+		passwordHash,       // $6: password
+		file.AvailableFrom, // $7: available_from
+		file.AvailableTo,   // $8: available_to
+		file.ShareToken,    // $9: share_token
+		file.CreatedAt,     // $10: created_at,
+		file.IsPublic,      // $11: is_public,
 	).Scan(&file.Id, &file.CreatedAt)
 
 	if err != nil {
@@ -521,47 +521,51 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 }
 
 func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
-    query := `
-        SELECT DISTINCT f.id
-        FROM files f JOIN shared s ON f.id = s.file_id
-        WHERE
-        (NOW() >= f.available_from AND NOW() < f.available_to)
-        AND s.user_id = $1
+	query := `
+        SELECT DISTINCT f.id, f.created_at
+		FROM files f
+		JOIN shared s ON f.id = s.file_id
+		LEFT JOIN users u ON f.user_id = u.id
+		WHERE (NOW() >= f.available_from AND NOW() < f.available_to)
+		  AND s.user_id = $1
     `
-    args := []any{userID}
+	args := []any{userID}
 
-    if search != "" {
-        query += " AND f.name ILIKE $2"
-        args = append(args, "%"+search+"%")
-    }
+	if search != "" {
+		query += " AND (f.name ILIKE $2 OR u.email ILIKE $2)"
+		args = append(args, "%"+search+"%")
+	}
 
-    var rows *sql.Rows = nil
-    var err error = nil
+	query += " ORDER BY f.created_at DESC"
 
-    rows, err = r.db.QueryContext(ctx, query, args...)
+	var rows *sql.Rows = nil
+	var err error = nil
 
-    if err != nil {
-        return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-    }
-    defer rows.Close()
+	rows, err = r.db.QueryContext(ctx, query, args...)
 
-    var out []domain.File
+	if err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var fileID string
-        if err := rows.Scan(&fileID); err != nil {
-            return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-        }
+	var out []domain.File
 
-        file, err := r.GetFileByID(ctx, fileID)
-        if err != nil {
-            return nil, err
-        }
+	for rows.Next() {
+		var fileID string
+		var createdAt time.Time
+		if err := rows.Scan(&fileID, &createdAt); err != nil {
+			return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+		}
 
-        out = append(out, *file)
-    }
+		file, err := r.GetFileByID(ctx, fileID)
+		if err != nil {
+			return nil, err
+		}
 
-    return out, nil
+		out = append(out, *file)
+	}
+
+	return out, nil
 }
 
 func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFileParams) ([]domain.File, int, *utils.ReturnStatus) {
@@ -630,7 +634,7 @@ func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFile
 	default:
 		safeSortBy = "created_at"
 	}
-	
+
 	safeOrder := "DESC"
 	if strings.ToLower(params.Order) == "asc" {
 		safeOrder = "ASC"
