@@ -521,47 +521,79 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 }
 
 func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
-    query := `
-        SELECT DISTINCT f.id
-        FROM files f JOIN shared s ON f.id = s.file_id
-        WHERE
-        (NOW() >= f.available_from AND NOW() < f.available_to)
-        AND s.user_id = $1
-    `
-    args := []any{userID}
+	// 🌟 SỬA: Chuyển f.has_password thành (f.password IS NOT NULL AND f.password != '') AS has_password
+	query := `
+		SELECT DISTINCT 
+			f.id, 
+			f.user_id, 
+			f.name, 
+			f.size, 
+			f.type, 
+			f.share_token, 
+			f.is_public, 
+			(f.password IS NOT NULL AND f.password != '') AS has_password, 
+			f.available_from, 
+			f.available_to, 
+			f.created_at
+		FROM files f 
+		JOIN shared s ON f.id = s.file_id
+		WHERE (NOW() >= f.available_from AND NOW() < f.available_to)
+		  AND s.user_id = $1
+	`
+	args := []any{userID}
 
-    if search != "" {
-        query += " AND f.name ILIKE $2"
-        args = append(args, "%"+search+"%")
-    }
+	if search != "" {
+		query += " AND f.name ILIKE $2"
+		args = append(args, "%"+search+"%")
+	}
 
-    var rows *sql.Rows = nil
-    var err error = nil
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+	}
+	defer rows.Close()
 
-    rows, err = r.db.QueryContext(ctx, query, args...)
+	var out []domain.File
+	now := time.Now()
 
-    if err != nil {
-        return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-    }
-    defer rows.Close()
+	for rows.Next() {
+		var f domain.File
+		var ownerID sql.NullString
 
-    var out []domain.File
+		// Scan khớp chính xác 100% với struct domain.File gốc của bạn
+		err := rows.Scan(
+			&f.Id, 
+			&ownerID, 
+			&f.FileName, 
+			&f.FileSize, 
+			&f.MimeType, 
+			&f.ShareToken,
+			&f.IsPublic, 
+			&f.HasPassword, // Nhận giá trị boolean vừa tính từ câu lệnh SQL trên
+			&f.AvailableFrom, 
+			&f.AvailableTo, 
+			&f.CreatedAt,
+		)
+		if err != nil {
+			return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
+		}
 
-    for rows.Next() {
-        var fileID string
-        if err := rows.Scan(&fileID); err != nil {
-            return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
-        }
+		if ownerID.Valid {
+			f.OwnerId = &ownerID.String
+		}
 
-        file, err := r.GetFileByID(ctx, fileID)
-        if err != nil {
-            return nil, err
-        }
+		// Tính toán Status cho File
+		f.Status = domain.FILE_ACTIVE
+		if now.Before(f.AvailableFrom) {
+			f.Status = domain.FILE_PENDING
+		} else if now.After(f.AvailableTo) {
+			f.Status = domain.FILE_EXPIRED
+		}
 
-        out = append(out, *file)
-    }
+		out = append(out, f)
+	}
 
-    return out, nil
+	return out, nil
 }
 
 func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFileParams) ([]domain.File, int, *utils.ReturnStatus) {
