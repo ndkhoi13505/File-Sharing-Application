@@ -402,41 +402,54 @@ func (s *fileService) GetFileDownloadHistory(ctx context.Context, fileID string,
 		log.Println("Not the owner")
 		return nil, utils.Response(utils.ErrCodeHistoryForbidden)
 	}
+
 	history, err := s.fileRepo.GetFileDownloadHistory(ctx, fileID)
 	if err.IsErr() {
 		return nil, err
 	}
+
+	if pagenum < 1 {
+		pagenum = 1
+	}
+	if limit <= 0 {
+		limit = 20
+	}
+
+	totalRecords := len(history.History)
+	totalPages := 0
+	if totalRecords > 0 {
+		totalPages = (totalRecords + limit - 1) / limit
+	}
+
 	history.Pagination = domain.Pagination{
 		CurrentPage:  pagenum,
-		TotalPages:   (len(history.History) + limit) / limit,
-		TotalRecords: len(history.History),
+		TotalPages:   totalPages,
+		TotalRecords: totalRecords,
 		Limit:        limit,
 	}
 
-	start := (len(history.History) / limit) * pagenum
-	end := min(start+limit, len(history.History))
-	history.History = history.History[start:end]
+	start := (pagenum - 1) * limit
+	end := min(start+limit, totalRecords)
+
+	if start >= totalRecords {
+		history.History = []domain.Download{}
+	} else {
+		history.History = history.History[start:end]
+	}
 
 	for i := range history.History {
 		u := &history.History[i]
 
-		if u.UserId == nil {
-			continue
-		}
-
-		if *u.UserId == "" {
+		if u.UserId == nil || *u.UserId == "" {
 			continue
 		}
 
 		user := domain.User{}
-		err := s.userRepo.FindById(*u.UserId, &user)
-		if err != nil {
-			return nil, err
-		}
-
-		u.Downloader = &domain.Downloader{
-			Username: user.Username,
-			Email:    user.Email,
+		if err := s.userRepo.FindById(*u.UserId, &user); err == nil {
+			u.Downloader = &domain.Downloader{
+				Username: user.Username,
+				Email:    user.Email,
+			}
 		}
 	}
 
