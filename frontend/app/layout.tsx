@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "File Sharing - Hệ thống chia sẻ file",
+  title: "File Sharing",
   description: "Nền tảng chia sẻ file an toàn",
 };
 
