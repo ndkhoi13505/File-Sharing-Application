@@ -3,26 +3,12 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ShieldCheck, Clock, Lock, FileUp } from "lucide-react";
-import { getApiBaseUrl } from "@/config/config";
 
 export default function HomePage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      const baseUrl = getApiBaseUrl();
-      fetch(`${baseUrl}/user`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (res.ok) {
-            window.location.href = "/dashboard";
-          } else {
-            localStorage.removeItem("token");
-          }
-        })
-        .catch(() => {
-          localStorage.removeItem("token");
-        });
+      window.location.href = "/dashboard";
     }
   }, []);
   return (

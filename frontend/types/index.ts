@@ -160,11 +160,12 @@ export interface UserFilesResponse {
 // admin
 // =====================
 export interface SystemPolicy {
-  MaxFileSizeMB: number;
-  MinValidityHours: number;
-  MaxValidityDays: number;
-  DefaultValidityDays: number;
-  RequirePasswordMinLength: number;
+  id: number;
+  maxFileSizeMB: number;
+  minValidityHours: number;
+  maxValidityDays: number;
+  defaultValidityDays: number;
+  requirePasswordMinLength: number;
 }
 
 export interface SystemPolicyUpdate {

@@ -39,6 +39,5 @@ func (fr *FileRoutes) Register(r *gin.RouterGroup) {
 		protected.GET("/info/:id", fr.handler.GetFileInfoVerbose)
 		protected.GET("/stats/:id", fr.handler.GetFileStats)
 		protected.GET("/download-history/:id", fr.handler.GetFileDownloadHistory)
-		protected.POST("/share/:id", fr.handler.ShareFile)
 	}
 }
