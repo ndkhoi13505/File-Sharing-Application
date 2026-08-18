@@ -239,10 +239,10 @@ export default function AdminPolicyPage() {
                   <lucideReact.AlertTriangle className="w-5 h-5 text-amber-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 leading-none truncate">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-normal truncate">
                     Xác nhận thay đổi ({changedFields.length} mục)
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1.5">Các thông số sau đây sẽ được cập nhật</p>
+                  <p className="text-xs text-gray-500 mt-1">Các thông số sau đây sẽ được cập nhật</p>
                 </div>
               </div>
               <button
