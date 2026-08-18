@@ -29,17 +29,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     setErrorMsg("");
     setSuccessMsg("");
 
-    // Validate Frontend
-    if (newPassword.length < 8) {
-      setErrorMsg("Mật khẩu mới phải có tối thiểu 8 ký tự.");
-      return;
-    }
     if (newPassword !== confirmPassword) {
       setErrorMsg("Mật khẩu mới và xác nhận mật khẩu không khớp.");
-      return;
-    }
-    if (oldPassword === newPassword) {
-      setErrorMsg("Mật khẩu mới không được trùng với mật khẩu cũ.");
       return;
     }
 
@@ -50,13 +41,13 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         new_password: newPassword,
       });
 
-      setSuccessMsg("Đổi mật khẩu thành công! Đang đăng xuất để áp dụng mật khẩu mới...");
+      setSuccessMsg("Đổi mật khẩu thành công!");
       setTimeout(() => {
         localStorage.removeItem("token");
         window.location.href = "/login";
       }, 2000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || "Lỗi khi đổi mật khẩu.";
+      const msg = err.response?.data?.message || err.response?.data?.error || "Đã xảy ra lỗi khi đổi mật khẩu.";
       setErrorMsg(typeof msg === "string" ? msg : "Mật khẩu cũ không chính xác.");
     } finally {
       setLoading(false);
@@ -99,7 +90,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 type={showOld ? "text" : "password"}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Nhập mật khẩu hiện tại của bạn"
                 required
                 className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-blue-600"
               />
@@ -116,13 +107,13 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
 
           {/* Mật khẩu mới */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase mb-1.5">Mật khẩu mới (Tối thiểu 8 ký tự)</label>
+            <label className="block text-xs font-semibold text-gray-600 uppercase mb-1.5">Mật khẩu mới</label>
             <div className="relative">
               <input
                 type={showNew ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Nhập mật khẩu mới"
                 required
                 className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-blue-600"
               />
@@ -145,7 +136,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Xác nhận mật khẩu mới"
                 required
                 className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-blue-600"
               />
@@ -173,7 +164,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               disabled={loading || Boolean(successMsg)}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm flex items-center gap-2 cursor-pointer shadow-md shadow-blue-600/20"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận đổi"}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận"}
             </button>
           </div>
         </form>

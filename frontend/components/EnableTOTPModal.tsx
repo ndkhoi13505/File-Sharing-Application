@@ -64,78 +64,119 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-green-600" />
-            <h3 className="text-lg font-bold text-gray-900">Bật xác thực 2 lớp (2FA)</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-6 space-y-5 animate-in zoom-in-95 duration-150">
+
+        {/* Header */}
+        <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 leading-none">Kích hoạt xác thực 2 lớp (2FA)</h3>
+            </div>
           </div>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer">
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer -mr-1"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-4 text-center">
+        <div>
           {loading ? (
-            <div className="py-12 text-gray-400 animate-pulse font-medium text-sm">Đang tạo mã QR...</div>
+            <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-500 text-sm">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              <span>Đang tạo mã bảo mật...</span>
+            </div>
           ) : setupData ? (
-            <>
-              <p className="text-xs text-gray-500 text-left">
-                Quét mã QR bằng ứng dụng Authenticator (Google Authenticator, Authy...) hoặc nhập Secret key:
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Sử dụng ứng dụng xác thực như <span className="font-semibold text-gray-800">Google Authenticator</span> hoặc <span className="font-semibold text-gray-800">Authy</span> để quét mã QR phía dưới, hoặc nhập khoá bí mật thủ công.
               </p>
 
-              {/* QR Code */}
-              <div className="flex justify-center p-3 bg-white border border-gray-200 rounded-2xl w-fit mx-auto shadow-xs">
-                <img src={setupData.qrCode} alt="TOTP QR Code" className="w-44 h-44 rounded-lg" />
+              <div className="flex justify-center p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                <img
+                  src={setupData.qrCode}
+                  alt="TOTP QR Code"
+                  className="w-40 h-40 rounded-lg"
+                />
               </div>
 
-              {/* Secret Key */}
-              <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs">
-                <span className="font-mono text-gray-700 font-semibold">{setupData.secret}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(setupData.secret);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium cursor-pointer"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Đã chép" : "Sao chép"}
-                </button>
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Khóa bí mật (Secret key)
+                </label>
+                <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl pl-3.5 pr-2 py-2">
+                  <span className="font-mono text-gray-800 font-medium text-sm select-all">
+                    {setupData.secret}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(setupData.secret);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${copied
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? "Đã chép" : "Sao chép"}</span>
+                  </button>
+                </div>
               </div>
 
               {errorMsg && (
-                <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs flex items-center gap-2 text-left">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              {/* Nhập mã 6 số */}
-              <form onSubmit={handleVerify} className="space-y-3 pt-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="Nhập 6 chữ số"
-                  className="w-full text-center tracking-[0.5em] font-mono text-xl py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={verifying || code.length !== 6}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-600/20"
-                >
-                  {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác minh & Kích hoạt"}
-                </button>
+              <form onSubmit={handleVerify} className="space-y-4 pt-2 border-t border-gray-100">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Nhập mã xác thực (6 chữ số)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="VD: 123456"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white text-center font-mono tracking-widest transition-colors"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={verifying || code.length !== 6}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    {verifying && <Loader2 className="w-4 h-4 animate-spin" />}
+                    <span>Xác nhận</span>
+                  </button>
+                </div>
               </form>
-            </>
+            </div>
           ) : (
-            <div className="text-sm text-red-500">{errorMsg || "Không thể kết nối dịch vụ 2FA."}</div>
+            <div className="p-4 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">
+              {errorMsg || "Không thể kết nối đến dịch vụ cấp mã bảo mật (2FA)."}
+            </div>
           )}
         </div>
       </div>

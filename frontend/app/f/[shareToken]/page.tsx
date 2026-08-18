@@ -52,7 +52,6 @@ export default function SharedFilePage() {
       setErrorStatus(null);
       setErrorDetails(null);
 
-      // 1. Lấy metadata cơ bản
       let currentMeta: PublicFileInfo | null = null;
       try {
         const res = await apiClient.get<{ file: PublicFileInfo }>(`/files/${shareToken}`);
@@ -62,14 +61,12 @@ export default function SharedFilePage() {
         }
       } catch (metaErr: any) {
         const status = metaErr.response?.status;
-        // Nếu là lỗi 423 (Chưa mở) hoặc 410 (Hết hạn) hoặc 404/401, dừng lại xử lý lỗi ngay
         if (status) {
           await handleApiError(metaErr, false, null);
           return;
         }
       }
 
-      // 2. Thử gọi preview (Backend tự bỏ qua password nếu là Owner hoặc Admin)
       await loadPreviewContent(undefined, currentMeta);
     } catch (err: any) {
       await handleApiError(err);
@@ -93,7 +90,6 @@ export default function SharedFilePage() {
         responseType: "blob",
       });
 
-      // Thành công
       setErrorStatus(null);
       setErrorDetails(null);
       setRequiresPassword(false);
@@ -167,7 +163,6 @@ export default function SharedFilePage() {
     const status = err.response?.status;
     let data = err.response?.data;
 
-    // Giải mã nếu dữ liệu lỗi dạng Blob
     if (data instanceof Blob) {
       try {
         const text = await data.text();
@@ -197,7 +192,7 @@ export default function SharedFilePage() {
       });
     } else if (status === 401) {
       setErrorDetails({
-        message: errorMessage || "Tập tin ở chế độ riêng tư. Bạn cần đăng nhập tài khoản được phép tải.",
+        message: errorMessage || "Tập tin ở chế độ riêng tư. Bạn cần đăng nhập tài khoản.",
       });
     } else if (status === 403) {
       const errMsg = (errorMessage || "").toLowerCase();

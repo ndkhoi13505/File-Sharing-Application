@@ -7,20 +7,12 @@ import UserAvatar from "@/components/UserAvatar";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import EnableTOTPModal from "@/components/EnableTOTPModal";
 import DisableTOTPModal from "@/components/DisableTOTPModal";
-import {
-  Mail,
-  ShieldCheck,
-  ShieldAlert,
-  User as UserIcon,
-  KeyRound,
-  Shield
-} from "lucide-react";
+import * as lucideReact from "lucide-react";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Modals state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isEnableTOTPOpen, setIsEnableTOTPOpen] = useState(false);
   const [isDisableTOTPOpen, setIsDisableTOTPOpen] = useState(false);
@@ -34,7 +26,7 @@ export default function SettingsPage() {
       const res = await authService.getCurrentUser();
       setUser(res.user);
     } catch (err) {
-      console.error("Lỗi lấy thông tin:", err);
+      console.error("Đã xảy ra lỗi khi lấy thông tin:", err);
     } finally {
       setLoading(false);
     }
@@ -50,10 +42,10 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Cài đặt tài khoản</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Quản lý thông tin cá nhân và thiết lập bảo mật hệ thống.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Quản lý thông tin cá nhân và thiết lập bảo mật.</p>
       </div>
 
-      {/* CARD 1: THÔNG TIN CÁ NHÂN */}
+      {/* Thông tin cá nhân */}
       <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm space-y-6">
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
           Thông tin cá nhân
@@ -76,11 +68,11 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 2 Ô THÔNG TIN CHI TIẾT */}
+        {/* Thông tin chi tiết */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1">
             <span className="text-xs text-gray-400 flex items-center gap-1.5">
-              <UserIcon className="w-3.5 h-3.5 text-gray-400" />
+              <lucideReact.User className="w-3.5 h-3.5 text-gray-400" />
               Tên tài khoản
             </span>
             <span className="font-semibold text-gray-800 block truncate capitalize">
@@ -90,7 +82,7 @@ export default function SettingsPage() {
 
           <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1">
             <span className="text-xs text-gray-400 flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-gray-400" />
+              <lucideReact.Mail className="w-3.5 h-3.5 text-gray-400" />
               Địa chỉ Email
             </span>
             <span className="font-semibold text-gray-800 block truncate">
@@ -100,20 +92,19 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* CARD 2: BẢO MẬT & TÀI KHOẢN */}
+      {/* Bảo mật */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8 space-y-6">
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-4">
-          <Shield className="w-5 h-5 text-blue-600" /> Bảo mật & Xác thực
+          <lucideReact.Shield className="w-5 h-5 text-blue-600" /> Bảo mật tài khoản
         </h2>
 
         <div className="divide-y divide-gray-100">
-          {/* Mục 1: Đổi mật khẩu */}
+          {/* Đổi mật khẩu */}
           <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-gray-500" /> Mật khẩu tài khoản
+                <lucideReact.KeyRound className="w-4 h-4 text-gray-500" /> Mật khẩu tài khoản
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">Nên định kỳ cập nhật mật khẩu để bảo vệ tài khoản tốt hơn.</p>
             </div>
             <button
               onClick={() => setIsPasswordModalOpen(true)}
@@ -123,20 +114,20 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          {/* Mục 2: Xác thực 2 bước (2FA) */}
+          {/* Xác thực 2 lớp (2FA) */}
           <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-gray-900 text-sm flex items-center gap-2">
                 {user?.totpEnabled ? (
-                  <ShieldCheck className="w-4 h-4 text-green-600" />
+                  <lucideReact.ShieldCheck className="w-4 h-4 text-green-600" />
                 ) : (
-                  <ShieldAlert className="w-4 h-4 text-amber-500" />
+                  <lucideReact.ShieldAlert className="w-4 h-4 text-red-500" />
                 )}
-                Xác thực 2 yếu tố (TOTP 2FA)
+                Xác thực 2 lớp (2FA)
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
                 Trạng thái:{" "}
-                <span className={`font-semibold ${user?.totpEnabled ? "text-green-600" : "text-amber-600"}`}>
+                <span className={`font-semibold ${user?.totpEnabled ? "text-green-600" : "text-red-600"}`}>
                   {user?.totpEnabled ? "Đang bật" : "Chưa kích hoạt"}
                 </span>
               </p>
@@ -147,27 +138,25 @@ export default function SettingsPage() {
                 onClick={() => setIsDisableTOTPOpen(true)}
                 className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors cursor-pointer w-fit border border-red-100"
               >
-                Hủy kích hoạt 2FA
+                Hủy kích hoạt
               </button>
             ) : (
               <button
                 onClick={() => setIsEnableTOTPOpen(true)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer w-fit shadow-md shadow-blue-600/20"
               >
-                Kích hoạt 2FA
+                Kích hoạt
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
       />
 
-      {/* Enable 2FA Modal */}
       <EnableTOTPModal
         isOpen={isEnableTOTPOpen}
         onClose={() => setIsEnableTOTPOpen(false)}
@@ -176,7 +165,6 @@ export default function SettingsPage() {
         }}
       />
 
-      {/* Disable 2FA Modal */}
       <DisableTOTPModal
         isOpen={isDisableTOTPOpen}
         onClose={() => setIsDisableTOTPOpen(false)}

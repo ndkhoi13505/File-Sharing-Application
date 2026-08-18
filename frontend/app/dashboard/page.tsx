@@ -6,34 +6,9 @@ import { fileService } from "@/services/file";
 import { authService } from "@/services/auth";
 import { User, File, UserFilesResponse } from "@/types";
 import UploadModal from "@/components/UploadModal";
-import ShareModal from "@/components/ShareModal";
 import UserAvatar from "@/components/UserAvatar";
-import BatchShareModal from "@/components/BatchShareModal";
 import FileInfoModal from "@/components/FileInfoModal";
-import {
-  Folder,
-  Clock,
-  AlertTriangle,
-  Mail,
-  ShieldAlert,
-  Download,
-  Trash2,
-  Lock,
-  FileUp,
-  Eye,
-  Link2,
-  Check,
-  Share2,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  ChevronDown,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  Info,
-} from "lucide-react";
+import * as lucideReact from "lucide-react";
 
 function getRemainingTimeBadge(file: File) {
   if (file.status === "expired") {
@@ -91,7 +66,6 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
 
-  // PHÂN TRANG, BỘ LỌC & SẮP XẾP
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize] = useState<number>(10);
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "pending" | "expired">("all");
@@ -99,10 +73,13 @@ export default function DashboardPage() {
   const [sortBy, setSortBy] = useState<"createdAt" | "fileName">("createdAt");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
 
-  // STATE QUẢN LÝ CHỌN NHIỀU FILE
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [batchActionLoading, setBatchActionLoading] = useState(false);
   const [isBatchShareOpen, setIsBatchShareOpen] = useState(false);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [batchDeleteModalOpen, setBatchDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -185,7 +162,7 @@ export default function DashboardPage() {
       setFileData(res);
       setSelectedFileIds([]);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Lỗi tải danh sách file");
+      setError(err.response?.data?.message || "Đã có lỗi xảy ra khi tải danh sách file");
     } finally {
       setTableLoading(false);
     }
@@ -210,7 +187,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-gray-50">
-        <p className="text-gray-500 animate-pulse font-medium">Đang tải dữ liệu từ server...</p>
+        <p className="text-gray-500 animate-pulse font-medium">Đang tải dữ liệu từ hệ thống...</p>
       </div>
     );
   }
@@ -252,15 +229,7 @@ export default function DashboardPage() {
 
   const handleDownloadSingleFile = async (fileItem: File) => {
     try {
-      let headers: Record<string, string> = {};
-      if (fileItem.hasPassword) {
-        const pass = prompt(`Tập tin "${fileItem.fileName}" có mật khẩu bảo vệ. Vui lòng nhập mật khẩu:`);
-        if (pass === null) return;
-        headers["X-File-Password"] = pass;
-      }
-
       const response = await apiClient.get(`/files/${fileItem.shareToken}/download`, {
-        headers,
         responseType: "blob",
       });
 
@@ -285,21 +254,35 @@ export default function DashboardPage() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Lỗi khi tải tập tin. Vui lòng thử lại.";
+      const msg = error.response?.data?.message || "Đã xảy ra lỗi khi tải file.";
       alert(msg);
     }
   };
 
-  const handleBatchDelete = async () => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedFileIds.length} tập tin đã chọn?`)) return;
+  const handleConfirmedDeleteSingleFile = async () => {
+    if (!fileToDelete) return;
+    const targetId = fileToDelete.id;
+    setDeleteModalOpen(false);
+    setFileToDelete(null);
+
+    try {
+      await fileService.deleteFile(targetId);
+      fetchFilesOnly();
+    } catch {
+      alert("Không thể xóa file này.");
+    }
+  };
+
+  const handleConfirmedBatchDelete = async () => {
+    setBatchDeleteModalOpen(false);
 
     try {
       setBatchActionLoading(true);
       await Promise.all(selectedFileIds.map((id) => fileService.deleteFile(id)));
       setSelectedFileIds([]);
       fetchFilesOnly();
-    } catch (err) {
-      alert("Xảy ra lỗi trong quá trình xóa một số tập tin.");
+    } catch {
+      alert("Đã xảy ra lỗi trong quá trình xóa một số file.");
     } finally {
       setBatchActionLoading(false);
     }
@@ -333,7 +316,7 @@ export default function DashboardPage() {
           onClick={() => setIsUploadOpen(true)}
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 cursor-pointer"
         >
-          <FileUp className="w-4 h-4" />
+          <lucideReact.FileUp className="w-4 h-4" />
           Upload File
         </button>
       </div>
@@ -355,13 +338,13 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
-                <Mail className="w-4 h-4" /> {user.email}
+                <lucideReact.Mail className="w-4 h-4" /> {user.email}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 text-sm">
-            <ShieldAlert className={`w-4 h-4 ${user.totpEnabled ? "text-green-600" : "text-gray-400"}`} />
+            <lucideReact.ShieldAlert className={`w-4 h-4 ${user.totpEnabled ? "text-green-600" : "text-gray-400"}`} />
             <span className="text-gray-600">Xác thực 2 lớp:</span>
             <span className={`font-semibold ${user.totpEnabled ? "text-green-600" : "text-red-500"}`}>
               {user.totpEnabled ? "Đã bật" : "Chưa cài đặt"}
@@ -375,7 +358,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
             <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
-              <Folder className="w-5 h-5" />
+              <lucideReact.Folder className="w-5 h-5" />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium">File đang hoạt động</p>
@@ -385,7 +368,7 @@ export default function DashboardPage() {
 
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
             <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-              <Clock className="w-5 h-5" />
+              <lucideReact.Clock className="w-5 h-5" />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium">File đang chờ</p>
@@ -395,7 +378,7 @@ export default function DashboardPage() {
 
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
             <div className="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
+              <lucideReact.AlertTriangle className="w-5 h-5" />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium">File đã hết hạn</p>
@@ -413,12 +396,12 @@ export default function DashboardPage() {
             <h3 className="text-lg font-bold text-gray-900">Danh sách file đã upload</h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {statusFilter === "pending"
-                ? `Tổng cộng ${fileData?.summary?.pendingFiles ?? allFiles.length} tập tin`
+                ? `Tổng cộng ${fileData?.summary?.pendingFiles ?? allFiles.length} file`
                 : statusFilter === "active"
-                  ? `Tổng cộng ${fileData?.summary?.activeFiles ?? allFiles.length} tập tin`
+                  ? `Tổng cộng ${fileData?.summary?.activeFiles ?? allFiles.length} file`
                   : statusFilter === "expired"
-                    ? `Tổng cộng ${fileData?.summary?.expiredFiles ?? allFiles.length} tập tin`
-                    : `Tổng cộng ${pagination?.totalFiles ?? allFiles.length} tập tin`}
+                    ? `Tổng cộng ${fileData?.summary?.expiredFiles ?? allFiles.length} file`
+                    : `Tổng cộng ${pagination?.totalFiles ?? allFiles.length} file`}
             </p>
           </div>
 
@@ -438,10 +421,10 @@ export default function DashboardPage() {
                 <option value="pending">Chờ hiệu lực</option>
                 <option value="expired">Đã hết hạn</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 pointer-events-none" />
+              <lucideReact.ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 pointer-events-none" />
             </div>
 
-            {/* Sort Dropdown */}
+            {/* Sort */}
             <div className="relative inline-flex items-center">
               <select
                 value={`${sortBy}-${order}`}
@@ -458,10 +441,10 @@ export default function DashboardPage() {
                 <option value="fileName-asc">Tên (A-Z)</option>
                 <option value="fileName-desc">Tên (Z-A)</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 pointer-events-none" />
+              <lucideReact.ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 pointer-events-none" />
             </div>
 
-            {/* Form Search */}
+            {/* Search */}
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
@@ -470,14 +453,13 @@ export default function DashboardPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-gray-50 border border-gray-200 text-gray-800 text-xs rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 w-44 sm:w-56"
               />
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <lucideReact.Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             </form>
           </div>
         </div>
 
         {error && <p className="p-4 text-sm text-red-500 bg-red-50 text-center">{error}</p>}
 
-        {/* Table Content */}
         <div className="overflow-x-auto relative">
           {tableLoading && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
@@ -503,9 +485,9 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-1.5">
                     <span>Tên file</span>
                     {sortBy === "fileName" ? (
-                      order === "asc" ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" /> : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />
+                      order === "asc" ? <lucideReact.ArrowUp className="w-3.5 h-3.5 text-blue-600" /> : <lucideReact.ArrowDown className="w-3.5 h-3.5 text-blue-600" />
                     ) : (
-                      <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+                      <lucideReact.ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
                     )}
                   </div>
                 </th>
@@ -558,14 +540,13 @@ export default function DashboardPage() {
                           {file.hasPassword && (
                             <div className="relative group inline-flex items-center">
                               <span className="p-1 bg-gray-100 text-gray-600 rounded cursor-pointer hover:bg-gray-200 transition-colors">
-                                <Lock className="w-3 h-3" />
+                                <lucideReact.Lock className="w-3 h-3" />
                               </span>
                               {/* Popup tooltip */}
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center pointer-events-none z-20">
                                 <span className="bg-gray-900 text-white text-[11px] font-medium px-2 py-1 rounded-md whitespace-nowrap shadow-md">
                                   Được bảo vệ bằng mật khẩu
                                 </span>
-                                {/* Mũi tên nhỏ bên dưới */}
                                 <span className="w-1.5 h-1.5 bg-gray-900 rotate-45 -mt-0.5" />
                               </div>
                             </div>
@@ -580,32 +561,21 @@ export default function DashboardPage() {
                       <td className="p-4 text-center space-x-2">
                         <button
                           type="button"
-                          onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xem trước file"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-
-                        {/*<button
-                          type="button"
-                          onClick={() => setSelectedFileId(file.id)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-amber-50 text-gray-500 hover:text-amber-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Chia sẻ file"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </button>*/}
-
-                        {/* Nút xem Chi tiết & Thống kê */}
-                        <button
-                          type="button"
                           onClick={() => setSelectedFileId(file.id)}
                           className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
                           title="Xem thông tin chi tiết của file"
                         >
-                          <Info className="w-4 h-4" />
+                          <lucideReact.Info className="w-4 h-4" />
                         </button>
-                        
+
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
+                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                          title="Xem trước file"
+                        >
+                          <lucideReact.Eye className="w-4 h-4" />
+                        </button>
 
                         <button
                           type="button"
@@ -613,7 +583,7 @@ export default function DashboardPage() {
                           className="inline-flex p-1.5 bg-gray-50 hover:bg-green-50 text-gray-500 hover:text-green-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
                           title="Tải file"
                         >
-                          <Download className="w-4 h-4" />
+                          <lucideReact.Download className="w-4 h-4" />
                         </button>
 
                         <button
@@ -622,27 +592,22 @@ export default function DashboardPage() {
                           title="Sao chép link chia sẻ"
                         >
                           {copiedId === file.id ? (
-                            <Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
+                            <lucideReact.Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
                           ) : (
-                            <Link2 className="w-4 h-4" />
+                            <lucideReact.Link2 className="w-4 h-4" />
                           )}
                         </button>
 
                         <button
-                          onClick={async () => {
-                            if (confirm(`Bạn có chắc muốn xóa file "${file.fileName}"?`)) {
-                              try {
-                                await fileService.deleteFile(file.id);
-                                fetchFilesOnly();
-                              } catch (err) {
-                                alert("Không thể xóa file này.");
-                              }
-                            }
+                          type="button"
+                          onClick={() => {
+                            setFileToDelete({ id: file.id, name: file.fileName });
+                            setDeleteModalOpen(true);
                           }}
                           className="inline-flex p-1.5 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
                           title="Xóa file"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <lucideReact.Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
@@ -674,7 +639,7 @@ export default function DashboardPage() {
                 className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Trang trước"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <lucideReact.ChevronLeft className="w-4 h-4" />
               </button>
 
               {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
@@ -705,58 +670,160 @@ export default function DashboardPage() {
                 className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Trang sau"
               >
-                <ChevronRight className="w-4 h-4" />
+                <lucideReact.ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Floating Actions Bar - Giao diện sáng */}
-{selectedFileIds.length > 0 && (
-  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md border border-gray-200 text-gray-800 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
-    
-    {/* Số lượng đã chọn */}
-    <div className="flex items-center gap-2 pr-3 border-r border-gray-200">
-      <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-        {selectedFileIds.length}
-      </span>
-      <span className="text-sm font-semibold text-gray-700">Đã chọn</span>
-    </div>
+      {selectedFileIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md border border-gray-200 text-gray-800 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
 
-    {/* Nút Tải về (Tone xanh lá) */}
-<button
-  type="button"
-  onClick={handleBatchDownload}
-  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-sm font-medium transition-colors cursor-pointer"
->
-  <Download className="w-4 h-4 text-emerald-600" />
-  <span>Tải về</span>
-</button>
+          {/* Số lượng đã chọn */}
+          <div className="flex items-center gap-2 pr-3 border-r border-gray-200">
+            <span className="text-sm font-semibold text-gray-700">Đã chọn</span>
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+              {selectedFileIds.length}
+            </span>
+          </div>
 
-    {/* Nút Xóa đã chọn */}
-    <button
-      type="button"
-      onClick={handleBatchDelete}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium border border-red-200 transition-colors cursor-pointer"
-    >
-      <Trash2 className="w-4 h-4 text-red-600" />
-      <span>Xóa file đã chọn</span>
-    </button>
+          {/* Nút Tải về */}
+          <button
+            type="button"
+            onClick={handleBatchDownload}
+            disabled={batchActionLoading}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <lucideReact.Download className="w-4 h-4 text-emerald-600" />
+            <span>{batchActionLoading ? "Đang tải xuống..." : "Tải xuống file đã chọn"}</span>
+          </button>
 
-    {/* Nút Đóng / Hủy chọn */}
-    <button
-      type="button"
-      onClick={() => setSelectedFileIds([])}
-      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer ml-1"
-      title="Bỏ chọn tất cả"
-    >
-      <X className="w-4 h-4" />
-    </button>
-  </div>
-)}
+          {/* Nút Xóa đã chọn */}
+          <button
+            type="button"
+            onClick={() => setBatchDeleteModalOpen(true)}
+            disabled={batchActionLoading}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium border border-red-200 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <lucideReact.Trash2 className="w-4 h-4 text-red-600" />
+            <span>Xóa file đã chọn</span>
+          </button>
 
-      {/* Upload Modal */}
+          {/* Nút Đóng / Hủy chọn */}
+          <button
+            type="button"
+            onClick={() => setSelectedFileIds([])}
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer ml-1"
+            title="Bỏ chọn tất cả"
+          >
+            <lucideReact.X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {deleteModalOpen && fileToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4 animate-in zoom-in-95 duration-150">
+
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
+                  <lucideReact.Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">Xóa file</h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setFileToDelete(null);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Đóng"
+              >
+                <lucideReact.X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Bạn có chắc chắn muốn xóa file <span className="font-bold text-gray-900">"{fileToDelete.name}"</span>? Hành động này không thể hoàn tác.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setFileToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmedDeleteSingleFile}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-red-600/20 transition-colors cursor-pointer"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {batchDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4 animate-in zoom-in-95 duration-150">
+
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
+                  <lucideReact.AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">Xóa nhiều file</h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setBatchDeleteModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Đóng"
+              >
+                <lucideReact.X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Bạn có chắc chắn muốn xóa <span className="font-bold text-red-600">{selectedFileIds.length} file đã chọn</span>? Hành động này không thể hoàn tác.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setBatchDeleteModalOpen(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmedBatchDelete}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-red-600/20 transition-colors cursor-pointer"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <UploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
@@ -765,31 +832,12 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* Share Modal */}
-      {selectedFileId && (
-        <ShareModal
-          fileId={selectedFileId}
-          onClose={() => setSelectedFileId(null)}
-        />
-      )}
-
       {selectedFileId && (
         <FileInfoModal
           fileId={selectedFileId}
           onClose={() => setSelectedFileId(null)}
         />
       )}
-
-      {/* Batch Share Modal */}
-      <BatchShareModal
-        fileIds={selectedFileIds}
-        isOpen={isBatchShareOpen}
-        onClose={() => setIsBatchShareOpen(false)}
-        onSuccess={() => {
-          setSelectedFileIds([]);
-          fetchFilesOnly();
-        }}
-      />
     </div>
   );
 }

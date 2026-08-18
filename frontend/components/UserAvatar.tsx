@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 interface UserAvatarProps {
   name?: string;
   avatarUrl?: string | null;
@@ -32,22 +30,9 @@ export default function UserAvatar({
     xl: "w-24 h-24 text-3xl font-extrabold",
   };
 
-  // 1. Nếu đã có ảnh đại diện -> Hiển thị <img>
-  if (avatarUrl && avatarUrl.trim() !== "") {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClasses[size]} rounded-full object-cover border border-gray-200 shadow-sm ${className}`}
-      />
-    );
-  }
-
-  // 2. Nếu chưa có ảnh -> Lấy chữ cái đầu và hash màu
   const trimmedName = name.trim();
   const firstLetter = (trimmedName.charAt(0) || "U").toUpperCase();
 
-  // Thuật toán hash chuỗi tên thành index màu cố định
   let hash = 0;
   for (let i = 0; i < trimmedName.length; i++) {
     hash = trimmedName.charCodeAt(i) + ((hash << 5) - hash);
