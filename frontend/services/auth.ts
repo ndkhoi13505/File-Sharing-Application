@@ -9,13 +9,11 @@ import {
 } from "@/types";
 
 export const authService = {
-  // Login bước 1: Có thể trả về LoginSuccessResponse hoặc TOTPRequiredResponse
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>("/auth/login", credentials);
     return response.data;
   },
 
-  // Login bước 2: Luôn trả về LoginSuccessResponse (có accessToken)
   verifyLoginTOTP: async (payload: { cid: string; code: string }): Promise<LoginSuccessResponse> => {
     const response = await apiClient.post<LoginSuccessResponse>("/auth/login/totp", payload);
     return response.data;

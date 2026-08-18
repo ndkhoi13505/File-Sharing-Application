@@ -1,9 +1,7 @@
-// Format MIME Type / File Extension sang tên hiển thị gọn gàng
 export const formatMimeType = (mimeType?: string, fileName?: string): string => {
   const mime = mimeType?.toLowerCase() || "";
   const ext = fileName?.split(".").pop()?.toLowerCase() || "";
 
-  // Office & Documents
   if (mime.includes("wordprocessingml") || ext === "docx") return "Word (.docx)";
   if (mime.includes("msword") || ext === "doc") return "Word (.doc)";
   if (mime.includes("spreadsheetml") || ext === "xlsx") return "Excel (.xlsx)";
@@ -14,14 +12,12 @@ export const formatMimeType = (mimeType?: string, fileName?: string): string => 
   if (mime === "text/plain" || ext === "txt") return "Văn bản (.txt)";
   if (mime === "text/csv" || ext === "csv") return "CSV";
 
-  // Images
   if (mime === "image/png" || ext === "png") return "Hình ảnh (PNG)";
   if (mime === "image/jpeg" || ext === "jpg" || ext === "jpeg") return "Hình ảnh (JPEG)";
   if (mime === "image/webp" || ext === "webp") return "Hình ảnh (WebP)";
   if (mime === "image/svg+xml" || ext === "svg") return "Hình ảnh (SVG)";
   if (mime === "image/gif" || ext === "gif") return "Ảnh động (GIF)";
 
-  // Audio & Video
   if (mime.startsWith("video/") || ["mp4", "mkv", "webm", "mov", "avi"].includes(ext)) {
     return `Video (.${ext || "mp4"})`;
   }
@@ -29,7 +25,6 @@ export const formatMimeType = (mimeType?: string, fileName?: string): string => 
     return `Âm thanh (.${ext || "mp3"})`;
   }
 
-  // Compressed / Archives
   if (mime.includes("zip") || ext === "zip") return "Tập tin nén (.zip)";
   if (mime.includes("x-rar") || ext === "rar") return "Tập tin nén (.rar)";
   if (ext === "7z" || mime.includes("7z")) return "Tập tin nén (.7z)";
@@ -39,7 +34,6 @@ export const formatMimeType = (mimeType?: string, fileName?: string): string => 
   return mime || "Tập tin nhị phân";
 };
 
-// Format dung lượng bytes sang KB / MB / GB
 export const formatFileSize = (bytes?: number): string => {
   if (!bytes || bytes === 0) return "0 B";
   const k = 1024;
@@ -48,7 +42,6 @@ export const formatFileSize = (bytes?: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-// Format thời gian an toàn tránh lỗi năm 0001
 export const formatDateTime = (dateStr?: string): string => {
   if (!dateStr) return "Không xác định";
   const date = new Date(dateStr);

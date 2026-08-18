@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -13,7 +13,6 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - ẩn/hiện hoặc thu gọn mượt mà */}
       <aside
         className={`transition-all duration-300 ease-in-out border-r border-gray-200 bg-white ${isSidebarOpen ? "w-64" : "w-0 -translate-x-full overflow-hidden border-none"
           }`}
@@ -23,9 +22,7 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Vùng nội dung chính */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Navbar chứa nút toggle sidebar */}
         <header className="h-16 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -43,7 +40,6 @@ export default function DashboardLayout({
           </button>
         </header>
 
-        {/* Nội dung Dashboard */}
         <main className="flex-1">
           {children}
         </main>

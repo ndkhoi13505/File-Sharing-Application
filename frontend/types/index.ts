@@ -41,7 +41,6 @@ export type RegisterRequest = {
   username: string;
   email: string;
   password: string;
-  //   role?: string; // Why allow users to register with role?
 };
 
 export type RegisterSuccessResponse = {
@@ -99,7 +98,7 @@ export type ChangePasswordRequest = {
 };
 
 // =====================
-// file upload
+// file
 // =====================
 export interface UploadedFileSummary {
   id: string;
@@ -133,8 +132,40 @@ export interface FileInfoResponse {
   file: File;
 }
 
+export interface FileInfo {
+  id: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  shareToken: string;
+  status: "active" | "pending" | "expired";
+  isPublic: boolean;
+  hasPassword: boolean;
+  availableFrom?: string;
+  availableTo?: string;
+  createdAt?: string;
+}
+
+export interface AvailableFile {
+  fileid: string;
+  filename: string;
+  owner: string | null;
+  haspassword: boolean;
+  sharetoken: string;
+}
+
+export interface AvailableFilesResponse {
+  files: AvailableFile[];
+  pagination: {
+    currentPage: number;
+    limit: number;
+    totalFiles: number;
+    totalPages: number;
+  };
+}
+
 // =====================
-// user profile
+// user
 // =====================
 export interface UserResponse {
   user: User;
@@ -184,44 +215,4 @@ export interface CleanupResponse {
   message: string;
   deletedFiles: number;
   timestamp: string;
-}
-
-// error
-
-// export interface Error {
-//   error: string;
-//   message: string;
-//   code: string;
-// }
-
-export interface FileInfo {
-  id: string;
-  fileName: string;
-  fileSize?: number;
-  mimeType?: string;
-  shareToken: string;
-  status: "active" | "pending" | "expired";
-  isPublic: boolean;
-  hasPassword: boolean;
-  availableFrom?: string;
-  availableTo?: string;
-  createdAt?: string;
-}
-
-export interface AvailableFile {
-  fileid: string;
-  filename: string;
-  owner: string | null;
-  haspassword: boolean;
-  sharetoken: string;
-}
-
-export interface AvailableFilesResponse {
-  files: AvailableFile[];
-  pagination: {
-    currentPage: number;
-    limit: number;
-    totalFiles: number;
-    totalPages: number;
-  };
 }

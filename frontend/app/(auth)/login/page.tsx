@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // TOTP State
   const [totpCid, setTotpCid] = useState<string | null>(null);
   const [isTotpOpen, setIsTotpOpen] = useState(false);
 
@@ -25,14 +24,12 @@ export default function LoginPage() {
     try {
       const data = await authService.login({ email, password });
 
-      // 1. Kiểm tra nếu là TOTPRequiredResponse
       if ("requireTOTP" in data && data.requireTOTP) {
         setTotpCid(data.cid);
         setIsTotpOpen(true);
         return;
       }
 
-      // 2. Ngược lại TypeScript sẽ nhận diện data là LoginSuccessResponse
       if ("accessToken" in data && data.accessToken) {
         localStorage.setItem("token", data.accessToken);
         if (data.user) {
@@ -56,9 +53,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-gray-50 px-4 text-gray-900">
       <div className="w-full max-w-md space-y-3">
-        {/* Nút quay lại trang chính */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors px-1"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -135,7 +131,6 @@ export default function LoginPage() {
         </form>
       </div>
 
-      {/* Modal nhập mã TOTP khi tài khoản có bật 2FA */}
       {totpCid && (
         <TOTPLoginModal
           isOpen={isTotpOpen}

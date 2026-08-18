@@ -390,7 +390,7 @@ export default function DashboardPage() {
 
       {/* File Table Card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Toolbar: Tìm kiếm, Lọc & Sắp xếp */}
+        {/* Toolbar */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Danh sách file đã upload</h3>

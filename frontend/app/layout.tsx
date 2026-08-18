@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "File Sharing",
-  description: "Nền tảng chia sẻ file an toàn",
+  description: "Nền tảng chia sẻ file",
 };
 
 export default function RootLayout({

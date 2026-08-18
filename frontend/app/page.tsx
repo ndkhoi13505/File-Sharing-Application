@@ -27,7 +27,7 @@ export default function HomePage() {
   }, []);
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50">
-      
+
       {/* HERO SECTION */}
       <section className="w-full bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 text-center">
@@ -37,18 +37,18 @@ export default function HomePage() {
           <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10">
             Chia sẻ file không cần tài khoản. Bảo vệ file được chia sẻ bằng mật khẩu.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/upload" 
+            <Link
+              href="/upload"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 hover:shadow-xl hover:translate-y-[-1px]"
             >
               <FileUp className="w-5 h-5 mr-2" />
               Upload File
             </Link>
-            
-            <Link 
-              href="/login" 
+
+            <Link
+              href="/login"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all"
             >
               Đăng nhập
