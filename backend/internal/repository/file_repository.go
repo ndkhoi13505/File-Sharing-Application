@@ -63,16 +63,16 @@ func (r *fileRepository) CreateFile(ctx context.Context, file *domain.File) (*do
 	`
 	err := r.db.QueryRowContext(ctx, query,
 		file.Id,
-		userID,				// $2: user_id
-		file.FileName,		// $3: name
-		file.MimeType,		// $4: type
-		file.FileSize,		// $5: size
-		passwordHash,		// $6: password
-		file.AvailableFrom,	// $7: available_from
-		file.AvailableTo,	// $8: available_to
-		file.ShareToken,	// $9: share_token
-		file.CreatedAt,		// $10: created_at,
-		file.IsPublic,		// $11: is_public,
+		userID,             // $2: user_id
+		file.FileName,      // $3: name
+		file.MimeType,      // $4: type
+		file.FileSize,      // $5: size
+		passwordHash,       // $6: password
+		file.AvailableFrom, // $7: available_from
+		file.AvailableTo,   // $8: available_to
+		file.ShareToken,    // $9: share_token
+		file.CreatedAt,     // $10: created_at,
+		file.IsPublic,      // $11: is_public,
 	).Scan(&file.Id, &file.CreatedAt)
 
 	if err != nil {
@@ -521,76 +521,48 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 }
 
 func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
-	// 🌟 SỬA: Chuyển f.has_password thành (f.password IS NOT NULL AND f.password != '') AS has_password
 	query := `
-		SELECT DISTINCT 
-			f.id, 
-			f.user_id, 
-			f.name, 
-			f.size, 
-			f.type, 
-			f.share_token, 
-			f.is_public, 
-			(f.password IS NOT NULL AND f.password != '') AS has_password, 
-			f.available_from, 
-			f.available_to, 
-			f.created_at
-		FROM files f 
+        SELECT DISTINCT f.id, f.created_at
+		FROM files f
 		JOIN shared s ON f.id = s.file_id
+		LEFT JOIN users u ON f.user_id = u.id
 		WHERE (NOW() >= f.available_from AND NOW() < f.available_to)
 		  AND s.user_id = $1
-	`
+    `
 	args := []any{userID}
 
 	if search != "" {
-		query += " AND f.name ILIKE $2"
+		query += " AND (f.name ILIKE $2 OR u.email ILIKE $2)"
 		args = append(args, "%"+search+"%")
 	}
 
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	query += " ORDER BY f.created_at DESC"
+
+	var rows *sql.Rows = nil
+	var err error = nil
+
+	rows, err = r.db.QueryContext(ctx, query, args...)
+
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
 	}
 	defer rows.Close()
 
 	var out []domain.File
-	now := time.Now()
 
 	for rows.Next() {
-		var f domain.File
-		var ownerID sql.NullString
-
-		// Scan khớp chính xác 100% với struct domain.File gốc của bạn
-		err := rows.Scan(
-			&f.Id, 
-			&ownerID, 
-			&f.FileName, 
-			&f.FileSize, 
-			&f.MimeType, 
-			&f.ShareToken,
-			&f.IsPublic, 
-			&f.HasPassword, // Nhận giá trị boolean vừa tính từ câu lệnh SQL trên
-			&f.AvailableFrom, 
-			&f.AvailableTo, 
-			&f.CreatedAt,
-		)
-		if err != nil {
+		var fileID string
+		var createdAt time.Time
+		if err := rows.Scan(&fileID, &createdAt); err != nil {
 			return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
 		}
 
-		if ownerID.Valid {
-			f.OwnerId = &ownerID.String
+		file, err := r.GetFileByID(ctx, fileID)
+		if err != nil {
+			return nil, err
 		}
 
-		// Tính toán Status cho File
-		f.Status = domain.FILE_ACTIVE
-		if now.Before(f.AvailableFrom) {
-			f.Status = domain.FILE_PENDING
-		} else if now.After(f.AvailableTo) {
-			f.Status = domain.FILE_EXPIRED
-		}
-
-		out = append(out, f)
+		out = append(out, *file)
 	}
 
 	return out, nil
@@ -662,7 +634,7 @@ func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFile
 	default:
 		safeSortBy = "created_at"
 	}
-	
+
 	safeOrder := "DESC"
 	if strings.ToLower(params.Order) == "asc" {
 		safeOrder = "ASC"

@@ -1,9 +1,9 @@
 package domain
 
 type SharedWith struct {
-	Id         string    `json:"id" db:"id"`
-	FileId     string    `json:"fileId" db:"file_id"`
-	UserId     string    `json:"userId" db:"user_id"`
+	Id     string `json:"id" db:"id"`
+	FileId string `json:"fileId" db:"file_id"`
+	UserId string `json:"userId" db:"user_id"`
 }
 
 type Shared struct {

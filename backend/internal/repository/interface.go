@@ -13,6 +13,7 @@ type UserRepository interface {
 	FindByCId(cid string, user *domain.UsersLoginSession) *utils.ReturnStatus
 	AddTimestamp(id string, cid string) *utils.ReturnStatus
 	DeleteTimestamp(id string) *utils.ReturnStatus
+	FindNonExistingEmails(emails []string) ([]string, *utils.ReturnStatus)
 }
 
 type AuthRepository interface {

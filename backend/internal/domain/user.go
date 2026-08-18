@@ -25,6 +25,6 @@ type UserResponse struct {
 }
 
 type UsersLoginSession struct {
-	Id			string `json:"id"`
-	Cid			string `json:"cid"`
+	Id  string `json:"id"`
+	Cid string `json:"cid"`
 }

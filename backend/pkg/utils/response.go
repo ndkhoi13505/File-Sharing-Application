@@ -46,8 +46,8 @@ const (
 	ErrCodeFileStatNotFound ErrorCode = "File not found or statistics not available"
 	ErrCodeHistoryForbidden ErrorCode = "You do not have permission to view download history for this file"
 
-	ErrCodeCleanupNotAdmin   ErrorCode = "You do not have permission to perform cleanup"
-	ErrCodeCleanUpLimited    ErrorCode = "Cleanup endpoint is rate limited. Please try again later"
+	ErrCodeCleanupNotAdmin ErrorCode = "You do not have permission to perform cleanup"
+	ErrCodeCleanUpLimited  ErrorCode = "Cleanup endpoint is rate limited. Please try again later"
 
 	ErrCodeCantAccessResource     ErrorCode = "You do not have permission to access this resource"
 	ErrCodeInvalidMaxMinValidDays ErrorCode = "maxValidityDays must be greater than or equal to minValidityHours"

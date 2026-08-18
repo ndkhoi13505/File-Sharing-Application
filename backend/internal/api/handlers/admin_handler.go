@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/api/dto"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/service"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/validation"
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
-	"github.com/gin-gonic/gin"
 )
 
 type AdminHandler struct {
@@ -69,20 +69,20 @@ func (ah *AdminHandler) CleanupExpiredFiles(ctx *gin.Context) {
 }
 
 func (ah *AdminHandler) GetAllFiles(ctx *gin.Context) {
-	status	:= ctx.DefaultQuery("status", "all")
-	page	:= utils.GetIntQuery(ctx, "page", 1)
-	limit	:= utils.GetIntQuery(ctx, "limit", 20)
-	sortBy	:= ctx.DefaultQuery("sortBy", "createdAt")
-	order	:= ctx.DefaultQuery("order", "desc")
-	search	:= ctx.Query("q")
+	status := ctx.DefaultQuery("status", "all")
+	page := utils.GetIntQuery(ctx, "page", 1)
+	limit := utils.GetIntQuery(ctx, "limit", 20)
+	sortBy := ctx.DefaultQuery("sortBy", "createdAt")
+	order := ctx.DefaultQuery("order", "desc")
+	search := ctx.Query("q")
 
 	params := domain.ListFileParams{
-		Status:	strings.ToLower(status),
-		Page:	page,
-		Limit:	limit,
-		SortBy:	sortBy,
-		Order:	strings.ToLower(order),
-		Search:	strings.TrimSpace(search),
+		Status: strings.ToLower(status),
+		Page:   page,
+		Limit:  limit,
+		SortBy: sortBy,
+		Order:  strings.ToLower(order),
+		Search: strings.TrimSpace(search),
 	}
 
 	result, err := ah.admin_service.GetAllFiles(ctx, params)

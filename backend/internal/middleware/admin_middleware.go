@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/jwt"
 )
 
 const AdminRole = "admin"

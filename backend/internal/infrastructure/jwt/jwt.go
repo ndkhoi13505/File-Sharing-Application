@@ -3,10 +3,10 @@ package jwt
 import (
 	"time"
 
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
-	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
+	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 )
 
 type JWTService struct {

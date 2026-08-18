@@ -6,15 +6,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 	"github.com/go-playground/validator/v10"
+	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 )
 
 func RegisterCustomValidation(v *validator.Validate) {
 	var blockedDomains = map[string]bool{
-		"blacklist.com":	true,
-		"edu.vn":			true,
-		"abc.com":			true,
+		"blacklist.com": true,
+		"edu.vn":        true,
+		"abc.com":       true,
 	}
 
 	v.RegisterValidation("email_advanced", func(fl validator.FieldLevel) bool {

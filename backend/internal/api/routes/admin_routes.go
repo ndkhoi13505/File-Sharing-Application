@@ -25,6 +25,6 @@ func (ar *AdminRoutes) Register(r *gin.RouterGroup) {
 
 		admin.PATCH("/policy", ar.handler.UpdateSystemPolicy)
 		admin.POST("/cleanup", ar.handler.CleanupExpiredFiles)
-		admin.GET("/files", ar.handler.GetAllFiles)
+		admin.GET("/all_files", ar.handler.GetAllFiles)
 	}
 }

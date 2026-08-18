@@ -1,5 +1,4 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(100) NOT NULL,
@@ -9,8 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
     enableTOTP BOOLEAN DEFAULT FALSE,
     secretTOTP VARCHAR(255)
 );
-
-
 CREATE TABLE IF NOT EXISTS files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID,
@@ -25,14 +22,12 @@ CREATE TABLE IF NOT EXISTS files (
     share_token TEXT,
     CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
 CREATE TABLE IF NOT EXISTS filestat (
     file_id UUID NOT NULL,
     download_count BIGINT DEFAULT 0,
     user_download_count BIGINT DEFAULT 0,
     CONSTRAINT filestat_file_id_fkey FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
 );
-
 CREATE TABLE IF NOT EXISTS shared (
     user_id UUID NOT NULL,
     file_id UUID NOT NULL,
@@ -40,7 +35,6 @@ CREATE TABLE IF NOT EXISTS shared (
     CONSTRAINT shared_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT shared_file_id_fkey FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
 );
-
 CREATE TABLE IF NOT EXISTS download (
     download_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     time TIMESTAMPTZ DEFAULT now(),
@@ -49,52 +43,51 @@ CREATE TABLE IF NOT EXISTS download (
     CONSTRAINT download_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT download_file_id_fkey FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
 );
-
 CREATE TABLE IF NOT EXISTS jwt_blacklist (
     id SERIAL PRIMARY KEY,
     token TEXT NOT NULL,
     expired_at TIMESTAMP NOT NULL
 );
-
 CREATE TABLE IF NOT EXISTS usersLoginSession (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cid UUID NOT NULL
 );
-
 DROP PROCEDURE IF EXISTS proc_download(UUID, UUID);
-
-CREATE PROCEDURE proc_download(f_id UUID, u_id UUID)
-LANGUAGE SQL
-AS $$
-    UPDATE filestat 
-    SET download_count = download_count + 1 
-    WHERE file_id = f_id;
-
-    UPDATE filestat
-    SET user_download_count = user_download_count + 1 
-    WHERE file_id = f_id AND u_id IS NOT NULL 
+CREATE PROCEDURE proc_download(f_id UUID, u_id UUID) LANGUAGE SQL AS $$
+UPDATE filestat
+SET download_count = download_count + 1
+WHERE file_id = f_id;
+UPDATE filestat
+SET user_download_count = user_download_count + 1
+WHERE file_id = f_id
+    AND u_id IS NOT NULL
     AND NOT EXISTS (
-        SELECT 1 
-        FROM download 
-        WHERE download.user_id = u_id AND download.file_id = f_id
+        SELECT 1
+        FROM download
+        WHERE download.user_id = u_id
+            AND download.file_id = f_id
     );
-
-    INSERT INTO download (file_id, user_id) VALUES (f_id, u_id);
+INSERT INTO download (file_id, user_id)
+VALUES (f_id, u_id);
 $$;
-
 -- =========================================================================
 -- Admin username:  admin
 -- Admin email:     admin@filesharing.com
 -- Admin password:  Admin@123
 -- =========================================================================
-
-INSERT INTO users (username, password, email, role, enableTOTP, secretTOTP)
+INSERT INTO users (
+        username,
+        password,
+        email,
+        role,
+        enableTOTP,
+        secretTOTP
+    )
 VALUES (
-    'admin', 
-    '$2a$10$PTihvTvrf7J3Fl.Od69fPuXkZGlqyl3ZFFGtevLvlkF6OAw5I8leC',
-    'admin@filesharing.com', 
-    'admin',
-    FALSE,
-    ''
-)
-ON CONFLICT (email) DO NOTHING;
+        'admin',
+        '$2a$10$PTihvTvrf7J3Fl.Od69fPuXkZGlqyl3ZFFGtevLvlkF6OAw5I8leC',
+        'admin@filesharing.com',
+        'admin',
+        FALSE,
+        ''
+    ) ON CONFLICT (email) DO NOTHING;

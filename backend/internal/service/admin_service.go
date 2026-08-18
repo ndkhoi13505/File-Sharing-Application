@@ -5,25 +5,25 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ndkhoi13505/File-Sharing-Application/config"
+	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/infrastructure/storage"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/repository"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
-	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
-	"github.com/gin-gonic/gin"
 )
 
 type adminService struct {
-	cfg			*config.Config
-	fileRepo	repository.FileRepository
-	storage		storage.Storage
+	cfg      *config.Config
+	fileRepo repository.FileRepository
+	storage  storage.Storage
 }
 
 func NewAdminService(cfg *config.Config, fr repository.FileRepository, s storage.Storage) AdminService {
 	return &adminService{
-		cfg:		cfg,
-		fileRepo:	fr,
-		storage:	s,
+		cfg:      cfg,
+		fileRepo: fr,
+		storage:  s,
 	}
 }
 
@@ -167,26 +167,26 @@ func (s *adminService) GetAllFiles(ctx context.Context, params domain.ListFilePa
 	}
 
 	pagination := gin.H{
-		"currentPage":	params.Page,
-		"totalPages":	totalPages,
-		"totalFiles":	totalFiles,
-		"limit":		params.Limit,
+		"currentPage": params.Page,
+		"totalPages":  totalPages,
+		"totalFiles":  totalFiles,
+		"limit":       params.Limit,
 	}
 
 	out := []gin.H{}
 	for _, f := range files {
 		out = append(out, gin.H{
-			"id":				f.Id,
-			"fileName":			f.FileName,
-			"mimeType":			f.MimeType,
-			"fileSize":			f.FileSize,
-			"shareToken":		f.ShareToken,
-			"ownerId":			f.OwnerId,
-			"isPublic":			f.IsPublic,
-			"status":			f.Status,
-			"availableFrom":	f.AvailableFrom,
-			"availableTo":		f.AvailableTo,
-			"createdAt":		f.CreatedAt,
+			"id":            f.Id,
+			"fileName":      f.FileName,
+			"mimeType":      f.MimeType,
+			"fileSize":      f.FileSize,
+			"shareToken":    f.ShareToken,
+			"ownerId":       f.OwnerId,
+			"isPublic":      f.IsPublic,
+			"status":        f.Status,
+			"availableFrom": f.AvailableFrom,
+			"availableTo":   f.AvailableTo,
+			"createdAt":     f.CreatedAt,
 		})
 	}
 

@@ -41,7 +41,7 @@ func NewConfig() *Config {
 			MinValidityHours:         1,
 			MaxValidityDays:          30,
 			DefaultValidityDays:      7,
-			RequirePasswordMinLength: 6,
+			RequirePasswordMinLength: 8,
 		},
 	}
 }
