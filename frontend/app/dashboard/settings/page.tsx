@@ -26,7 +26,7 @@ export default function SettingsPage() {
       const res = await authService.getCurrentUser();
       setUser(res.user);
     } catch (err) {
-      console.error("Đã xảy ra lỗi khi lấy thông tin:", err);
+      console.error("Đã xảy ra lỗi khi lấy thông tin: ", err);
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Cài đặt tài khoản</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Quản lý thông tin cá nhân và thiết lập bảo mật.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Quản lý thông tin cá nhân và cài đặt bảo mật</p>
       </div>
 
       {/* Thông tin cá nhân */}
@@ -93,7 +93,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Bảo mật */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8 space-y-6">
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-4">
           <lucideReact.Shield className="w-5 h-5 text-blue-600" /> Bảo mật tài khoản
         </h2>

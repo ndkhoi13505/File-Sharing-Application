@@ -82,7 +82,7 @@ export default function AdminAllFilesPage() {
       setCleanupResult({ deletedFiles: res.deletedFiles ?? 0 });
       fetchFiles();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Đã có lỗi xảy ra khi dọn dẹp file hết hạn.");
+      alert(err.response?.data?.message || "Đã có lỗi xảy ra khi dọn dẹp file hết hạn");
     } finally {
       setCleaning(false);
     }
@@ -98,7 +98,7 @@ export default function AdminAllFilesPage() {
       await fileService.deleteFile(targetId);
       fetchFiles();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Không thể xóa file này.");
+      alert(err.response?.data?.message || "Không thể xóa file này");
     }
   };
 
@@ -139,7 +139,7 @@ export default function AdminAllFilesPage() {
       setFileToDownload(fileItem);
       setDownloadPassword("");
       setShowDownloadPassword(false);
-      setPasswordModalError(isRetry ? "Mật khẩu không chính xác. Vui lòng thử lại!" : "");
+      setPasswordModalError(isRetry ? "Mật khẩu không chính xác. Vui lòng thử lại" : "");
       setPasswordModalOpen(true);
       passwordResolverRef.current = resolve;
     });
@@ -197,7 +197,7 @@ export default function AdminAllFilesPage() {
         }
 
         const status = error.response?.status;
-        const msg = data?.message || data?.error || "Đã có lỗi xảy ra khi tải file.";
+        const msg = data?.message || data?.error || "Đã có lỗi xảy ra khi tải file";
 
         if (status === 403) {
           const userEnteredPassword = await promptPasswordViaModal(fileItem, Boolean(currentPwd));
@@ -238,7 +238,7 @@ export default function AdminAllFilesPage() {
       setSelectedFileIds([]);
       fetchFiles();
     } catch (err) {
-      alert("Đã xảy ra lỗi trong quá trình xóa một số file.");
+      alert("Đã xảy ra lỗi trong quá trình xóa một số file");
     } finally {
       setBatchActionLoading(false);
     }
@@ -251,66 +251,75 @@ export default function AdminAllFilesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 pb-24">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-md">Admin</span>
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý toàn bộ file</h1>
+            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-md shrink-0">
+              Admin
+            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight truncate">
+              Quản lý toàn bộ file
+            </h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">Quản lý toàn bộ file có trong hệ thống</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            Quản lý toàn bộ file có trong hệ thống
+          </p>
         </div>
 
         <button
+          type="button"
           onClick={() => setCleanupModalOpen(true)}
           disabled={cleaning}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-red-600/20 cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-red-600/20 whitespace-nowrap shrink-0 w-full sm:w-auto cursor-pointer"
         >
-          <lucideReact.Trash2 className="w-4 h-4" />
-          {cleaning ? "Đang dọn dẹp..." : "Dọn dẹp file hết hạn"}
+          <lucideReact.Trash2 className="w-4 h-4 shrink-0" />
+          <span>{cleaning ? "Đang dọn dẹp..." : "Dọn dẹp file hết hạn"}</span>
         </button>
       </div>
 
       {/* Thanh công cụ */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Tìm Kiếm */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             setCurrentPage(1);
             fetchFiles();
           }}
-          className="relative"
+          className="relative flex-1"
         >
           <input
             type="text"
-            placeholder="Tìm kiếm file trong hệ thống..."
+            placeholder="Tìm kiếm file theo tên..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-gray-50 border border-gray-200 text-sm rounded-xl pl-9 pr-4 py-2 w-64 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-all"
           />
           <lucideReact.Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
         </form>
 
-        <div className="flex items-center gap-3">
-          {/* Bộ lọc trạng thái */}
-          <div className="relative inline-flex items-center">
+        {/* Bộ Lọc */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 shrink-0">
+          {/* Trạng thái */}
+          <div className="relative">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl pl-3.5 pr-8 py-2 focus:outline-none cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs sm:text-sm rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="active">Đang hoạt động</option>
               <option value="pending">Chờ hiệu lực</option>
               <option value="expired">Đã hết hạn</option>
             </select>
-            <lucideReact.ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+            <lucideReact.ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Sắp xếp */}
-          <div className="relative inline-flex items-center">
+          <div className="relative">
             <select
               value={`${sortBy}-${order}`}
               onChange={(e) => {
@@ -319,7 +328,7 @@ export default function AdminAllFilesPage() {
                 setOrder(newOrder);
                 setCurrentPage(1);
               }}
-              className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl pl-3.5 pr-8 py-2 focus:outline-none cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs sm:text-sm rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
             >
               <option value="createdAt-desc">Mới nhất</option>
               <option value="createdAt-asc">Cũ nhất</option>
@@ -328,7 +337,7 @@ export default function AdminAllFilesPage() {
               <option value="fileName-asc">Tên (A-Z)</option>
               <option value="fileName-desc">Tên (Z-A)</option>
             </select>
-            <lucideReact.ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 pointer-events-none" />
+            <lucideReact.ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -336,7 +345,7 @@ export default function AdminAllFilesPage() {
       {/* Danh sách file */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm text-gray-600">
+          <table className="w-full min-w-225 text-left border-collapse text-sm text-gray-600 whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-700 text-xs uppercase font-bold border-b border-gray-100">
               <tr>
                 <th className="p-4 w-10">
@@ -395,7 +404,7 @@ export default function AdminAllFilesPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-gray-400 animate-pulse">
-                    Đang tải danh sách file có trong hệ thống...
+                    Đang tải danh sách các file có trong hệ thống...
                   </td>
                 </tr>
               ) : allFiles.length > 0 ? (
@@ -426,8 +435,8 @@ export default function AdminAllFilesPage() {
                       </td>
 
                       <td className="p-4 text-center">
-                        <span className={`px-2 py-0.5 text-xs rounded-md font-semibold ${file.isPublic ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}>
-                          {file.isPublic ? "Public" : "Private"}
+                        <span className={`px-2.5 py-1 text-xs rounded-md font-semibold ${file.isPublic ? "bg-blue-50 text-blue-700 border border-blue-100" : "bg-purple-50 text-purple-700 border border-purple-100"}`}>
+                          {file.isPublic ? "Công khai" : "Riêng tư"}
                         </span>
                       </td>
 
@@ -444,63 +453,65 @@ export default function AdminAllFilesPage() {
                         {new Date(file.createdAt).toLocaleString("vi-VN")}
                       </td>
 
-                      <td className="p-4 text-center space-x-2">
-                        {/* Nút Xem thông tin chi tiết */}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFileIdForModal(file.id)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xem thông tin chi tiết của file"
-                        >
-                          <lucideReact.Info className="w-4 h-4" />
-                        </button>
+                      <td className="p-4 text-center">
+                        <div className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap">
+                          {/* Nút Xem thông tin chi tiết */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFileIdForModal(file.id)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xem thông tin chi tiết của file"
+                          >
+                            <lucideReact.Info className="w-4 h-4" />
+                          </button>
 
-                        {/* Nút Xem trước */}
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xem trước file"
-                        >
-                          <lucideReact.Eye className="w-4 h-4" />
-                        </button>
+                          {/* Nút Xem trước */}
+                          <button
+                            type="button"
+                            onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xem trước file"
+                          >
+                            <lucideReact.Eye className="w-4 h-4" />
+                          </button>
 
-                        {/* Nút Tải file */}
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadSingleFile(file)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-green-50 text-gray-500 hover:text-green-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Tải file"
-                        >
-                          <lucideReact.Download className="w-4 h-4" />
-                        </button>
+                          {/* Nút Tải file */}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadSingleFile(file)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-green-50 text-gray-500 hover:text-green-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Tải file"
+                          >
+                            <lucideReact.Download className="w-4 h-4" />
+                          </button>
 
-                        {/* Nút Sao chép link */}
-                        <button
-                          type="button"
-                          onClick={() => handleCopyLink(file)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-purple-50 text-gray-500 hover:text-purple-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Sao chép link chia sẻ"
-                        >
-                          {copiedId === file.id ? (
-                            <lucideReact.Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
-                          ) : (
-                            <lucideReact.Link2 className="w-4 h-4" />
-                          )}
-                        </button>
+                          {/* Nút Sao chép link */}
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(file)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-purple-50 text-gray-500 hover:text-purple-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Sao chép link chia sẻ"
+                          >
+                            {copiedId === file.id ? (
+                              <lucideReact.Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
+                            ) : (
+                              <lucideReact.Link2 className="w-4 h-4" />
+                            )}
+                          </button>
 
-                        {/* Nút Xóa file */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFileToDelete({ id: file.id, name: file.fileName });
-                            setDeleteModalOpen(true);
-                          }}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xóa file"
-                        >
-                          <lucideReact.Trash2 className="w-4 h-4" />
-                        </button>
+                          {/* Nút Xóa file */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFileToDelete({ id: file.id, name: file.fileName });
+                              setDeleteModalOpen(true);
+                            }}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xóa file"
+                          >
+                            <lucideReact.Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -508,7 +519,7 @@ export default function AdminAllFilesPage() {
               ) : (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-gray-400">
-                    Không tìm thấy file nào trong hệ thống.
+                    Không tìm thấy file nào trong hệ thống
                   </td>
                 </tr>
               )}
@@ -637,7 +648,7 @@ export default function AdminAllFilesPage() {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              File <span className="font-bold text-gray-900">"{fileToDownload.fileName}"</span> yêu cầu mật khẩu để tải xuống.
+              File <span className="font-bold text-gray-900">"{fileToDownload.fileName}"</span> yêu cầu mật khẩu để tải xuống
             </p>
 
             {passwordModalError && (
@@ -694,13 +705,13 @@ export default function AdminAllFilesPage() {
                   }}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Bỏ qua file này
+                  Bỏ qua
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 transition-colors cursor-pointer"
                 >
-                  Xác nhận & Tải xuống
+                  Xác nhận
                 </button>
               </div>
             </form>
@@ -728,16 +739,16 @@ export default function AdminAllFilesPage() {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              Bạn có chắc chắn muốn <span className="font-bold text-red-600">xóa tất cả file đã hết hạn</span> trong hệ thống? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn <span className="font-bold text-red-600">xóa tất cả file đã hết hạn</span> trong hệ thống? Hành động này không thể hoàn tác
             </p>
 
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setCleanupModalOpen(false)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
                 type="button"
@@ -774,7 +785,7 @@ export default function AdminAllFilesPage() {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              Bạn có chắc chắn muốn xóa file <span className="font-bold text-gray-900">"{fileToDelete.name}"</span> khỏi hệ thống? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa file <span className="font-bold text-gray-900">"{fileToDelete.name}"</span> khỏi hệ thống? Hành động này không thể hoàn tác
             </p>
 
             <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -786,7 +797,7 @@ export default function AdminAllFilesPage() {
                 }}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
                 type="button"
@@ -820,7 +831,7 @@ export default function AdminAllFilesPage() {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              Bạn có chắc chắn muốn xóa <span className="font-bold text-red-600">{selectedFileIds.length} file đã chọn</span> khỏi hệ thống? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa <span className="font-bold text-red-600">{selectedFileIds.length} file đã chọn</span> khỏi hệ thống? Hành động này không thể hoàn tác
             </p>
 
             <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -829,7 +840,7 @@ export default function AdminAllFilesPage() {
                 onClick={() => setBatchDeleteModalOpen(false)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
                 type="button"
@@ -870,10 +881,10 @@ export default function AdminAllFilesPage() {
               <p className="text-sm text-gray-600 mt-1">
                 {cleanupResult.deletedFiles > 0 ? (
                   <>
-                    Đã xóa thành công <span className="font-bold text-emerald-600">{cleanupResult.deletedFiles}</span> file hết hạn khỏi hệ thống.
+                    Đã xóa thành công <span className="font-bold text-emerald-600">{cleanupResult.deletedFiles}</span> file hết hạn khỏi hệ thống
                   </>
                 ) : (
-                  "Hiện tại không có tập tin nào hết hạn cần dọn dẹp."
+                  "Hiện tại không có file hết hạn để dọn dẹp"
                 )}
               </p>
             </div>
@@ -884,7 +895,7 @@ export default function AdminAllFilesPage() {
                 onClick={() => setCleanupResult(null)}
                 className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 transition-colors cursor-pointer"
               >
-                Đã hiểu
+                OK
               </button>
             </div>
           </div>

@@ -35,16 +35,38 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
       const res = await authService.setupTOTP();
       setSetupData(res.totpSetup);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Không thể tạo mã thiết lập 2FA.");
+      setErrorMsg(err.response?.data?.message || "Không thể tạo mã thiết lập 2FA");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopySecret = async (secret: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(secret);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = secret;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setErrorMsg("Không thể sao chép mã khóa");
     }
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
-      setErrorMsg("Vui lòng nhập đủ 6 chữ số.");
+      setErrorMsg("Vui lòng nhập đủ 6 chữ số");
       return;
     }
 
@@ -55,7 +77,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
       onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Mã xác thực không hợp lệ hoặc đã hết hạn.");
+      setErrorMsg(err.response?.data?.message || "Mã xác thực không hợp lệ hoặc đã hết hạn");
     } finally {
       setVerifying(false);
     }
@@ -64,22 +86,25 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-6 space-y-5 animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-100 p-5 sm:p-6 space-y-5 animate-in zoom-in-95 duration-150 my-8">
 
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center pb-3 border-b border-gray-100 gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 leading-none">Kích hoạt xác thực 2 lớp (2FA)</h3>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+                Kích hoạt xác thực 2 lớp (2FA)
+              </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer -mr-1"
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer shrink-0"
+            title="Đóng"
           >
             <X className="w-5 h-5" />
           </button>
@@ -93,34 +118,31 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
             </div>
           ) : setupData ? (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Sử dụng ứng dụng xác thực như <span className="font-semibold text-gray-800">Google Authenticator</span> hoặc <span className="font-semibold text-gray-800">Authy</span> để quét mã QR phía dưới, hoặc nhập khoá bí mật thủ công.
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Sử dụng ứng dụng xác thực như <span className="font-semibold text-gray-800">Google Authenticator</span> hoặc <span className="font-semibold text-gray-800">Authy</span> để quét mã QR phía dưới, hoặc nhập khoá bí mật thủ công
               </p>
 
               <div className="flex justify-center p-3 bg-gray-50 border border-gray-200 rounded-xl">
                 <img
                   src={setupData.qrCode}
                   alt="TOTP QR Code"
-                  className="w-40 h-40 rounded-lg"
+                  className="w-36 h-36 sm:w-40 sm:h-40 rounded-lg object-contain bg-white p-1"
                 />
               </div>
 
+              {/* Khóa bí mật (Secret Key) */}
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-700">
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700">
                   Khóa bí mật (Secret key)
                 </label>
-                <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl pl-3.5 pr-2 py-2">
-                  <span className="font-mono text-gray-800 font-medium text-sm select-all">
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-1.5 pl-3">
+                  <span className="font-mono text-gray-800 font-medium text-xs sm:text-sm select-all min-w-0 flex-1 truncate">
                     {setupData.secret}
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(setupData.secret);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${copied
+                    onClick={() => handleCopySecret(setupData.secret)}
+                    className={`inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors cursor-pointer shrink-0 whitespace-nowrap ${copied
                       ? "bg-green-50 text-green-700 border-green-200"
                       : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
                       }`}
@@ -140,11 +162,12 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
 
               <form onSubmit={handleVerify} className="space-y-4 pt-2 border-t border-gray-100">
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700">
                     Nhập mã xác thực (6 chữ số)
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     maxLength={6}
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
@@ -160,7 +183,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
                     onClick={onClose}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
                   >
-                    Hủy bỏ
+                    Hủy
                   </button>
                   <button
                     type="submit"
@@ -175,7 +198,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
             </div>
           ) : (
             <div className="p-4 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">
-              {errorMsg || "Không thể kết nối đến dịch vụ cấp mã bảo mật (2FA)."}
+              {errorMsg || "Không thể kết nối đến dịch vụ cấp mã bảo mật (2FA)"}
             </div>
           )}
         </div>

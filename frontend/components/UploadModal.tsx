@@ -65,7 +65,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
       resetForm();
       fileService.getSystemPolicy()
         .then((data) => setPolicy(data))
-        .catch((err) => console.error("Can't get system policy:", err));
+        .catch((err) => console.error("Can't get system policy: ", err));
     }
   }, [isOpen]);
 
@@ -90,18 +90,16 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
     setSharedWith(sharedWith.filter((e) => e !== emailToRemove));
   };
 
-  // Bước 1: Validate và mở popup xác nhận
   const handlePreSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!file) {
-      setError("Vui lòng chọn tập tin cần tải lên.");
+      setError("Vui lòng chọn file cần tải lên");
       return;
     }
     setError(null);
     setShowConfirmModal(true);
   };
 
-  // Bước 2: Tiến hành upload sau khi bấm xác nhận
   const handleConfirmedUpload = async () => {
     setShowConfirmModal(false);
     setError(null);
@@ -168,13 +166,13 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
               <div>
                 <h4 className="text-xl font-bold text-gray-900">Tải lên thành công!</h4>
                 <p className="text-sm text-gray-600 mt-1.5">
-                  File <b className="text-gray-900">{uploadResult.file.fileName}</b> đã sẵn sàng.
+                  File <b className="text-gray-900">{uploadResult.file.fileName}</b> đã sẵn sàng
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-left">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
-                  Đường link chia sẻ
+                  Link chia sẻ
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -215,37 +213,37 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
             <>
               {/* System policy */}
               {policy && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 space-y-3">
+                <div className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
-                    <lucideReact.Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <lucideReact.Info className="w-4 h-4 text-blue-600 shrink-0" />
                     <span>Quy định hiện tại của hệ thống</span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                     <div className="bg-white/80 backdrop-blur rounded-lg p-2.5 border border-blue-100/60 flex flex-col justify-between">
                       <span className="text-gray-500 flex items-center gap-1 mb-1">
-                        <lucideReact.HardDrive className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" /> Dung lượng file tối đa
+                        <lucideReact.HardDrive className="w-3.5 h-3.5 text-blue-600 shrink-0" /> Dung lượng file tối đa
                       </span>
                       <span className="font-bold text-gray-900 text-sm">{policy.MaxFileSizeMB} MB</span>
                     </div>
 
                     <div className="bg-white/80 backdrop-blur rounded-lg p-2.5 border border-blue-100/60 flex flex-col justify-between">
                       <span className="text-gray-500 flex items-center gap-1 mb-1">
-                        <lucideReact.Calendar className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" /> Thời gian lưu mặc định
+                        <lucideReact.Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" /> Thời gian lưu mặc định
                       </span>
                       <span className="font-bold text-gray-900 text-sm">{policy.DefaultValidityDays} ngày</span>
                     </div>
 
                     <div className="bg-white/80 backdrop-blur rounded-lg p-2.5 border border-blue-100/60 flex flex-col justify-between">
                       <span className="text-gray-500 flex items-center gap-1 mb-1">
-                        <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" /> Thời gian lưu tối thiểu
+                        <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" /> Thời gian lưu tối thiểu
                       </span>
                       <span className="font-bold text-gray-900 text-sm">{policy.MinValidityHours} giờ</span>
                     </div>
 
                     <div className="bg-white/80 backdrop-blur rounded-lg p-2.5 border border-blue-100/60 flex flex-col justify-between">
                       <span className="text-gray-500 flex items-center gap-1 mb-1">
-                        <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" /> Thời gian lưu tối đa
+                        <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" /> Thời gian lưu tối đa
                       </span>
                       <span className="font-bold text-gray-900 text-sm">{policy.MaxValidityDays} ngày</span>
                     </div>
@@ -255,7 +253,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
 
               {error && (
                 <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2.5 text-red-700 text-sm">
-                  <lucideReact.AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <lucideReact.AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
@@ -297,7 +295,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                   <button
                     type="button"
                     onClick={() => setIsPublic(!isPublic)}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isPublic ? "bg-blue-600" : "bg-gray-300"
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isPublic ? "bg-blue-600" : "bg-gray-300"
                       }`}
                   >
                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${isPublic ? "translate-x-5" : "translate-x-0"}`} />
@@ -423,7 +421,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
           )}
         </div>
 
-        {/* Xác nhận thông tin */}
+        {/* Xác nhận */}
         {showConfirmModal && (
           <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm p-6 flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
             <div className="space-y-4">
@@ -439,7 +437,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                   Lưu ý quan trọng:
                 </p>
                 <p>
-                  Các cài đặt cho file sau khi tải lên sẽ <b className="underline">không thể chỉnh sửa</b>. Vui lòng kiểm tra kỹ thông tin trước khi upload!
+                  Các cài đặt cho file sau khi tải lên sẽ <b className="underline">không thể chỉnh sửa</b>. Vui lòng kiểm tra kỹ thông tin trước khi upload
                 </p>
               </div>
 
@@ -449,7 +447,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                   <span className="text-gray-500 flex items-center gap-1.5">
                     Tên file:
                   </span>
-                  <span className="font-semibold text-gray-900 truncate max-w-[240px]">{file?.name}</span>
+                  <span className="font-semibold text-gray-900 truncate max-w-60">{file?.name}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-1 border-b border-gray-200/60">
@@ -515,7 +513,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                       </div>
                     ) : (
                       <p className="text-xs text-red-500 italic">
-                        Chưa có người nhận nào trong danh sách.
+                        Chưa có người nhận nào trong danh sách
                       </p>
                     )}
                   </div>
@@ -530,14 +528,14 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
                 onClick={() => setShowConfirmModal(false)}
                 className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium cursor-pointer transition-colors"
               >
-                Quay lại chỉnh sửa
+                Quay lại
               </button>
               <button
                 type="button"
                 onClick={handleConfirmedUpload}
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 cursor-pointer transition-colors"
               >
-                Xác nhận & Tải lên
+                Xác nhận
               </button>
             </div>
           </div>

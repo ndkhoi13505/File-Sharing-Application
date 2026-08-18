@@ -48,7 +48,7 @@ export default function SharedWithMePage() {
         });
       }
     } catch (err) {
-      console.error("Đã có lỗi xảy ra khi lấy danh sách Shared With Me: ", err);
+      console.error("Đã có lỗi xảy ra khi lấy danh sách file được chia sẻ với tôi: ", err);
       setFiles([]);
     } finally {
       setLoading(false);
@@ -112,13 +112,13 @@ export default function SharedWithMePage() {
       }
 
       const status = error.response?.status;
-      const msg = data?.message || data?.error || "Đã xảy ra lỗi khi tải file.";
+      const msg = data?.message || data?.error || "Đã xảy ra lỗi khi tải file";
 
       if (status === 403) {
         setFileToDownload(fileItem);
         setPasswordModalOpen(true);
         if (pwd) {
-          setPasswordModalError("Mật khẩu không chính xác. Vui lòng thử lại!");
+          setPasswordModalError("Mật khẩu không chính xác. Vui lòng thử lại");
         }
         return;
       }
@@ -134,7 +134,7 @@ export default function SharedWithMePage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Được chia sẻ với tôi</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Danh sách các file còn hạn được người khác chia sẻ với bạn.
+            Danh sách các file còn hạn được người khác chia sẻ với bạn
           </p>
         </div>
 
@@ -161,13 +161,13 @@ export default function SharedWithMePage() {
           <lucideReact.Share2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <p className="text-base font-semibold text-gray-700">Chưa có file nào</p>
           <p className="text-xs text-gray-400 mt-1">
-            Các file còn hạn được chia sẻ với bạn sẽ xuất hiện ở đây.
+            Các file còn hạn được chia sẻ với bạn sẽ xuất hiện ở đây
           </p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm text-gray-600">
+            <table className="w-full min-w-175 text-left border-collapse text-sm text-gray-600 whitespace-nowrap">
               <thead className="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
                 <tr>
                   <th className="p-4">Tên File</th>
@@ -201,26 +201,28 @@ export default function SharedWithMePage() {
                       )}
                     </td>
 
-                    <td className="p-4 text-center space-x-2 whitespace-nowrap">
-                      {/* Nút Xem trước */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenPreview(file.sharetoken)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-blue-100"
-                        title="Xem trước file trong tab mới"
-                      >
-                        <lucideReact.Eye className="w-3.5 h-3.5" /> Xem trước file
-                      </button>
+                    <td className="p-4 text-center">
+                      <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                        {/* Nút Xem trước */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPreview(file.sharetoken)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-blue-100"
+                          title="Xem trước file trong tab mới"
+                        >
+                          <lucideReact.Eye className="w-3.5 h-3.5" /> Xem trước file
+                        </button>
 
-                      {/* Nút Tải xuống */}
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadFile(file)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-green-100"
-                        title="Tải trực tiếp tập tin về máy"
-                      >
-                        <lucideReact.Download className="w-3.5 h-3.5" /> Tải file
-                      </button>
+                        {/* Nút Tải xuống */}
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadFile(file)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-green-100"
+                          title="Tải trực tiếp tập tin về máy"
+                        >
+                          <lucideReact.Download className="w-3.5 h-3.5" /> Tải file
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -309,7 +311,7 @@ export default function SharedWithMePage() {
             </div>
 
             <p className="text-sm text-gray-600 leading-relaxed">
-              File <span className="font-bold text-gray-900">"{fileToDownload.filename}"</span> yêu cầu mật khẩu.
+              File <span className="font-bold text-gray-900">"{fileToDownload.filename}"</span> yêu cầu mật khẩu
             </p>
 
             {passwordModalError && (
@@ -362,7 +364,7 @@ export default function SharedWithMePage() {
                   }}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"

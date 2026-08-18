@@ -73,7 +73,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                 setHistoryPage(page);
             }
         } catch (err: any) {
-            console.error("Lỗi khi tải trang lịch sử:", err);
+            console.error("Lỗi khi tải trang lịch sử: ", err);
         } finally {
             setHistoryLoading(false);
         }
@@ -99,37 +99,43 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-xl border border-gray-100 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex justify-between items-center px-6 py-4.5 border-b border-gray-100">
-                    <div className="flex items-center gap-2.5">
-                        <Info className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-lg font-bold text-gray-900 truncate max-w-md">
-                            {fileDetail?.fileName || "Thông tin tập tin"}
+                <div className="flex justify-between items-center gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                            <Info className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate leading-tight" title={fileDetail?.fileName}>
+                            {fileDetail?.fileName || "Thông tin file"}
                         </h3>
                     </div>
-                    <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors shrink-0"
+                        title="Đóng"
+                    >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex border-b border-gray-100 px-6 bg-gray-50/50">
+                <div className="flex border-b border-gray-100 px-4 sm:px-6 bg-gray-50/50 overflow-x-auto whitespace-nowrap scrollbar-none">
                     <button
                         onClick={() => setActiveTab("info")}
-                        className={`flex items-center gap-2 py-3 px-3.5 text-sm font-semibold border-b-2 cursor-pointer transition-colors ${activeTab === "info" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
+                        className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "info" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
                         <Info className="w-4 h-4" /> Chi tiết File
                     </button>
                     <button
                         onClick={() => setActiveTab("stats")}
-                        className={`flex items-center gap-2 py-3 px-3.5 text-sm font-semibold border-b-2 cursor-pointer transition-colors ${activeTab === "stats" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
+                        className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "stats" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
                         <BarChart2 className="w-4 h-4" /> Thống kê lượt tải
                     </button>
                     <button
                         onClick={() => setActiveTab("history")}
-                        className={`flex items-center gap-2 py-3 px-3.5 text-sm font-semibold border-b-2 cursor-pointer transition-colors ${activeTab === "history" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
+                        className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "history" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
                         <History className="w-4 h-4" /> Lịch sử tải xuống
@@ -142,10 +148,9 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                         <div className="py-12 text-center text-gray-400 animate-pulse font-medium text-sm">Đang tải dữ liệu...</div>
                     ) : (
                         <>
-                            {/* TAB 1: THÔNG TIN CHI TIẾT */}
+                            {/* Thông tin chi tiết */}
                             {activeTab === "info" && fileDetail && (
                                 <div className="space-y-4">
-                                    {/* 🌟 KHỐI THÔNG TIN CHỦ TẬP TIN (OWNER) */}
                                     <div className="bg-blue-50/50 p-4.5 rounded-2xl border border-blue-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
@@ -154,7 +159,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-bold text-gray-900 text-sm">
-                                                        {fileDetail.owner?.username || "Ẩn danh (Anonymous)"}
+                                                        {fileDetail.owner?.username || "Ẩn danh"}
                                                     </span>
                                                     {fileDetail.owner?.role && (
                                                         <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-md uppercase ${fileDetail.owner.role === "admin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
@@ -170,11 +175,10 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                             </div>
                                         </div>
                                         <span className="text-xs text-blue-700 font-semibold bg-blue-100/60 px-2.5 py-1 rounded-lg">
-                                            Chủ tập tin
+                                            Chủ sở hữu
                                         </span>
                                     </div>
 
-                                    {/* Thông tin thông số tập tin */}
                                     <div className="grid grid-cols-2 gap-3.5 bg-gray-50 p-4.5 rounded-2xl border border-gray-200">
                                         <div>
                                             <span className="text-gray-500 block text-xs mb-0.5">Dung lượng:</span>
@@ -220,7 +224,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                     <div className="bg-gray-50 p-4.5 rounded-2xl border border-gray-200 space-y-2.5">
                                         <div className="flex items-center justify-between">
                                             <span className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                                                <Users className="w-4 h-4 text-blue-600" /> Danh sách người nhận được cấp quyền:
+                                                <Users className="w-4 h-4 text-blue-600" /> Danh sách tài khoản được chia sẻ:
                                             </span>
                                             <span className="text-xs text-gray-500 font-medium">
                                                 {fileDetail.isPublic
@@ -244,13 +248,13 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                         ) : (
                                             <p className="text-xs text-gray-400 italic pt-1">
                                                 {fileDetail.isPublic
-                                                    ? "Tập tin ở chế độ công khai (mọi người có liên kết đều tải được)."
-                                                    : "Chưa cấu hình cấp quyền cho người dùng cụ thể nào."}
+                                                    ? "File ở chế độ công khai (mọi người có liên kết đều truy cập được)"
+                                                    : "Chưa cấu hình cấp quyền cho người dùng cụ thể nào"}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Share link input */}
+                                    {/* Share link */}
                                     <div>
                                         <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
                                             Link chia sẻ
@@ -275,7 +279,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                 </div>
                             )}
 
-                            {/* TAB 2: THỐNG KÊ DOWNLOAD */}
+                            {/* Thống kê download */}
                             {activeTab === "stats" && (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
@@ -297,58 +301,61 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                 </div>
                             )}
 
-                            {/* TAB 3: LỊCH SỬ DOWNLOAD */}
+                            {/* Lịch sử download */}
                             {activeTab === "history" && (
                                 <div className="space-y-3">
                                     {historyLoading ? (
                                         <div className="py-8 text-center text-gray-400 animate-pulse font-medium text-sm">Đang tải lịch sử...</div>
                                     ) : historyData?.history && historyData.history.length > 0 ? (
                                         <>
-                                            <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                                                <table className="w-full text-left border-collapse text-sm">
-                                                    <thead className="bg-gray-50 text-gray-700 border-b border-gray-200 text-xs font-semibold uppercase tracking-wider">
-                                                        <tr>
-                                                            <th className="p-3.5">Người tải</th>
-                                                            <th className="p-3.5">Thời điểm</th>
-                                                            <th className="p-3.5 text-center">Trạng thái</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-gray-100">
-                                                        {historyData.history.map((row: any) => (
-                                                            <tr key={row.id} className="hover:bg-gray-50/50">
-                                                                <td className="p-3.5 font-medium text-gray-900">
-                                                                    {row.downloader ? (
-                                                                        <div>
-                                                                            <p className="font-semibold text-sm">{row.downloader.username || "Thành viên"}</p>
-                                                                            <p className="text-xs text-gray-400">{row.downloader.email}</p>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-gray-400 italic text-sm">Ẩn danh</span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="p-3.5 text-gray-600 text-sm">
+                                            <div className="space-y-2.5 max-h-95 overflow-y-auto pr-1">
+                                                {historyData.history.map((row: any) => (
+                                                    <div
+                                                        key={row.id}
+                                                        className="p-3.5 bg-gray-50/80 hover:bg-gray-100/80 border border-gray-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
+                                                    >
+                                                        {/* Thông tin người tải */}
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm shrink-0 shadow-xs">
+                                                                {row.downloader?.username?.charAt(0).toUpperCase() || "?"}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-semibold text-gray-900 text-sm truncate">
+                                                                    {row.downloader?.username || "Ẩn danh"}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 truncate">
+                                                                    {row.downloader?.email || formatDateTime(row.downloadedAt)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Thời gian và Trạng thái */}
+                                                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
+                                                            <div className="text-left sm:text-right">
+                                                                <span className="text-xs text-gray-500 block font-medium">
                                                                     {formatDateTime(row.downloadedAt)}
-                                                                </td>
-                                                                <td className="p-3.5 text-center">
-                                                                    {row.downloadCompleted ? (
-                                                                        <span className="inline-flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-green-200">
-                                                                            <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn tất
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="inline-flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-red-200">
-                                                                            <XCircle className="w-3.5 h-3.5" /> Gián đoạn
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                                </span>
+                                                            </div>
+
+                                                            <div>
+                                                                {row.downloadCompleted ? (
+                                                                    <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-semibold border border-emerald-200">
+                                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hoàn tất
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="inline-flex items-center gap-1 text-red-700 bg-red-50 px-2.5 py-1 rounded-lg text-xs font-semibold border border-red-200">
+                                                                        <XCircle className="w-3.5 h-3.5 text-red-600" /> Gián đoạn
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
 
-                                            {/* History */}
+                                            {/* Phân trang */}
                                             {historyData.pagination && historyData.pagination.totalPages > 1 && (
-                                                <div className="flex items-center justify-between pt-2.5 px-1 text-xs text-gray-600">
+                                                <div className="flex items-center justify-between pt-3 px-1 text-xs text-gray-600 border-t border-gray-100">
                                                     <span>
                                                         Trang <b className="text-gray-900">{historyData.pagination.currentPage}</b> / <b className="text-gray-900">{historyData.pagination.totalPages}</b> (Tổng {historyData.pagination.totalRecords} lượt tải)
                                                     </span>
@@ -376,7 +383,9 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                             )}
                                         </>
                                     ) : (
-                                        <div className="text-center py-8 text-gray-400 text-sm">Chưa có lịch sử tải về nào cho tập tin này.</div>
+                                        <div className="text-center py-10 text-gray-400 text-sm">
+                                            Chưa có lịch sử tải về cho file này
+                                        </div>
                                     )}
                                 </div>
                             )}

@@ -64,7 +64,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="w-full space-y-6 rounded-2xl bg-white p-8 shadow-sm border border-gray-200">
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-brand-main">Đăng nhập</h2>
-            <p className="text-sm text-gray-500">Đăng nhập tài khoản của bạn.</p>
+            <p className="text-sm text-gray-500">Đăng nhập tài khoản của bạn</p>
           </div>
 
           {error && (

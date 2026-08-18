@@ -178,21 +178,21 @@ export default function SharedFilePage() {
     const errorMessage = data?.message || data?.error;
 
     if (status === 404) {
-      setErrorDetails({ message: errorMessage || "Không tìm thấy tập tin hoặc liên kết đã bị xóa." });
+      setErrorDetails({ message: errorMessage || "Không tìm thấy file hoặc file đã bị xóa" });
     } else if (status === 410) {
       setErrorDetails({
-        message: errorMessage || "Tập tin này đã hết hạn và không còn khả dụng.",
+        message: errorMessage || "File này đã hết hạn và không còn khả dụng",
         expiredAt: data?.expiredAt,
       });
     } else if (status === 423) {
       setErrorDetails({
-        message: "Tập tin chưa đến thời gian mở truy cập.",
+        message: "File này chưa đến thời gian mở truy cập",
         availableFrom: data?.availableFrom,
         hoursUntilAvailable: data?.hoursUntilAvailable,
       });
     } else if (status === 401) {
       setErrorDetails({
-        message: errorMessage || "Tập tin ở chế độ riêng tư. Bạn cần đăng nhập tài khoản.",
+        message: errorMessage || "File này ở chế độ riêng tư. Bạn cần đăng nhập tài khoản",
       });
     } else if (status === 403) {
       const errMsg = (errorMessage || "").toLowerCase();
@@ -205,15 +205,15 @@ export default function SharedFilePage() {
       if (isPasswordIssue) {
         setRequiresPassword(true);
         if (isPasswordSubmit) {
-          setPasswordError(errorMessage || "Mật khẩu không chính xác. Vui lòng thử lại!");
+          setPasswordError(errorMessage || "Mật khẩu không chính xác. Vui lòng thử lại");
         }
       } else {
         setErrorDetails({
-          message: errorMessage || "Bạn không có quyền truy cập hoặc tải tập tin này.",
+          message: errorMessage || "Bạn không có quyền truy cập hoặc tải file này",
         });
       }
     } else {
-      setErrorDetails({ message: errorMessage || "Đã xảy ra lỗi khi kết nối máy chủ." });
+      setErrorDetails({ message: errorMessage || "Đã xảy ra lỗi khi kết nối máy chủ" });
     }
   };
 
@@ -235,18 +235,18 @@ export default function SharedFilePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col">
       {/* Header */}
-      <header className="h-16 border-b border-gray-200 bg-white/90 backdrop-blur px-6 flex items-center justify-between shrink-0 shadow-xs">
-        <div className="flex items-center gap-3">
+      <header className="min-h-16 py-3 border-b border-gray-200 bg-white/90 backdrop-blur px-4 sm:px-6 flex items-center justify-between gap-3 shrink-0 shadow-xs">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
             onClick={() => router.push("/dashboard")}
-            className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+            className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition-colors cursor-pointer shrink-0"
             title="Quay lại"
           >
             <lucideReact.ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="font-bold text-base text-gray-900 max-w-md truncate">
-              {publicMeta?.fileName || "Chi tiết tập tin chia sẻ"}
+          <div className="min-w-0 flex-1">
+            <h1 className="font-bold text-sm sm:text-base text-gray-900 truncate" title={publicMeta?.fileName}>
+              {publicMeta?.fileName || "Chi tiết file được chia sẻ"}
             </h1>
             {publicMeta?.fileSize ? (
               <p className="text-xs text-gray-500">
@@ -260,20 +260,19 @@ export default function SharedFilePage() {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-blue-600/20 cursor-pointer disabled:opacity-50"
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-blue-600/20 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
           >
             {downloading ? <lucideReact.Loader2 className="w-4 h-4 animate-spin" /> : <lucideReact.Download className="w-4 h-4" />}
-            Tải về
+            <span>Tải về</span>
           </button>
         )}
       </header>
 
-      {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 py-20">
             <lucideReact.Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-            <p className="text-sm text-gray-500 font-medium">Đang kiểm tra bảo mật và tải tập tin...</p>
+            <p className="text-sm text-gray-500 font-medium">Đang kiểm tra bảo mật và tải file...</p>
           </div>
         ) : errorStatus && !requiresPassword ? (
           /* Khung hiển thị lỗi */
@@ -306,9 +305,9 @@ export default function SharedFilePage() {
               )}
 
               <h2 className="text-lg font-bold text-gray-900">
-                {errorStatus === 404 ? "Không tìm thấy tập tin" :
-                  errorStatus === 410 ? "Tập tin đã hết hạn" :
-                    errorStatus === 423 ? "Tập tin chưa mở" :
+                {errorStatus === 404 ? "Không tìm thấy file" :
+                  errorStatus === 410 ? "File đã hết hạn" :
+                    errorStatus === 423 ? "File chưa mở" :
                       errorStatus === 401 ? "Yêu cầu đăng nhập tài khoản" : "Truy cập bị từ chối"}
               </h2>
               <p className="text-sm text-gray-600">{errorDetails?.message}</p>
@@ -353,7 +352,7 @@ export default function SharedFilePage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">File có mật khẩu bảo vệ</h2>
-                <p className="text-xs text-gray-500 mt-1">Vui lòng nhập mật khẩu để xem nội dung.</p>
+                <p className="text-xs text-gray-500 mt-1">Vui lòng nhập mật khẩu để xem nội dung</p>
               </div>
 
               {passwordError && (
@@ -400,24 +399,24 @@ export default function SharedFilePage() {
           /* Hiển thị nội dung file */
           <>
             {publicMeta && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="min-w-0">
                   <span className="text-xs text-gray-400 block mb-0.5">Định dạng file</span>
                   <span className="font-semibold text-sm text-gray-800 truncate block" title={publicMeta.mimeType}>
                     {formatMimeType(publicMeta.mimeType, publicMeta.fileName)}
                   </span>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs text-gray-400 block mb-0.5">Dung lượng file</span>
-                  <span className="font-semibold text-sm text-gray-800">
+                  <span className="font-semibold text-sm text-gray-800 block truncate">
                     {publicMeta.fileSize ? `${(publicMeta.fileSize / (1024 * 1024)).toFixed(2)} MB` : "0 B"}
                   </span>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs text-gray-400 block mb-0.5">Quyền truy cập</span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-sm text-gray-800">
+                  <span className="inline-flex items-center gap-1 font-semibold text-sm text-gray-800 truncate">
                     {publicMeta.isPublic ? (
                       <span className="text-blue-600 flex items-center gap-1">Công khai</span>
                     ) : (
@@ -426,7 +425,7 @@ export default function SharedFilePage() {
                   </span>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs text-gray-400 block mb-0.5">Trạng thái</span>
                   <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${publicMeta.status === "active" ? "bg-green-50 text-green-700 border border-green-200" :
                     publicMeta.status === "pending" ? "bg-amber-50 text-amber-700 border border-amber-200" :
@@ -439,7 +438,7 @@ export default function SharedFilePage() {
             )}
 
             {/* Preview hoặc download */}
-            <div className="flex-1 bg-white border border-gray-200 rounded-3xl p-6 shadow-xs flex items-center justify-center min-h-[500px]">
+            <div className="flex-1 bg-white border border-gray-200 rounded-3xl p-6 shadow-xs flex items-center justify-center min-h-125">
               {fileBlobUrl && isPreviewSupported ? (
                 fileType === "image" ? (
                   <img

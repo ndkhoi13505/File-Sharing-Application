@@ -66,10 +66,9 @@ export default function AdminPolicyPage() {
     unit: string;
   }[] = [
       { key: "maxFileSizeMB", label: "Dung lượng tối đa của mỗi file", unit: "MB" },
-      { key: "requirePasswordMinLength", label: "Độ dài mật khẩu tối thiểu", unit: "ký tự" },
       { key: "minValidityHours", label: "Thời gian lưu file tối thiểu", unit: "giờ" },
-      { key: "maxValidityDays", label: "Thời gian lưu file tối đa", unit: "ngày" },
       { key: "defaultValidityDays", label: "Thời gian lưu file mặc định", unit: "ngày" },
+      { key: "maxValidityDays", label: "Thời gian lưu file tối đa", unit: "ngày" },
     ];
 
   const changedFields = policyFields.filter(
@@ -83,7 +82,7 @@ export default function AdminPolicyPage() {
     if (changedFields.length === 0) {
       setMessage({
         type: "error",
-        text: "Bạn chưa thực hiện thay đổi thông số nào.",
+        text: "Bạn chưa thực hiện thay đổi thông số nào",
       });
       return;
     }
@@ -108,7 +107,7 @@ export default function AdminPolicyPage() {
       setCurrentPolicy({ ...formData });
       setMessage({ type: "success", text: "Cập nhật cấu hình hệ thống thành công" });
     } catch (err: any) {
-      setMessage({ type: "error", text: err.response?.data?.message || "Lỗi khi cập nhật cấu hình hệ thống" });
+      setMessage({ type: "error", text: err.response?.data?.message || "Đã xảy ra lỗi khi cập nhật cấu hình hệ thống" });
     } finally {
       setSaving(false);
     }
@@ -149,13 +148,12 @@ export default function AdminPolicyPage() {
         </div>
       )}
 
-      {/* Form cấu hình */}
       <form
         onSubmit={handlePreSubmit}
         className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Max file size */}
+          {/* Dung lượng tối đa */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
               Dung lượng tối đa của mỗi file (MB)
@@ -165,29 +163,13 @@ export default function AdminPolicyPage() {
               min={1}
               value={formData.maxFileSizeMB}
               onChange={(e) => setFormData({ ...formData, maxFileSizeMB: Number(e.target.value) })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
               required
             />
-            <span className="text-xs text-gray-400 mt-1 block">Giới hạn kích thước tối đa của file tải lên.</span>
+            <span className="text-xs text-gray-400 mt-1 block">Giới hạn kích thước tối đa của một file</span>
           </div>
 
-          {/* Password min length */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
-              Độ dài mật khẩu tối thiểu
-            </label>
-            <input
-              type="number"
-              min={6}
-              value={formData.requirePasswordMinLength}
-              onChange={(e) => setFormData({ ...formData, requirePasswordMinLength: Number(e.target.value) })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-            <span className="text-xs text-gray-400 mt-1 block">Số ký tự tối thiểu khi đặt mật khẩu.</span>
-          </div>
-
-          {/* Min validity hours */}
+          {/* Thời gian lưu tối thiểu */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
               Thời gian lưu file tối thiểu (Giờ)
@@ -197,13 +179,29 @@ export default function AdminPolicyPage() {
               min={1}
               value={formData.minValidityHours}
               onChange={(e) => setFormData({ ...formData, minValidityHours: Number(e.target.value) })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
               required
             />
-            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian tối thiểu giữa thời điểm hiệu lực và hết hạn.</span>
+            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian tối thiểu giữa thời điểm hiệu lực và hết hạn</span>
           </div>
 
-          {/* Max validity days */}
+          {/* Thời gian lưu mặc định */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">
+              Thời gian lưu file mặc định (Ngày)
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={formData.defaultValidityDays}
+              onChange={(e) => setFormData({ ...formData, defaultValidityDays: Number(e.target.value) })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              required
+            />
+            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian mặc định của một file được lưu trên hệ thống</span>
+          </div>
+
+          {/* Thời gian lưu tối đa */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">
               Thời gian lưu file tối đa (Ngày)
@@ -213,30 +211,14 @@ export default function AdminPolicyPage() {
               min={1}
               value={formData.maxValidityDays}
               onChange={(e) => setFormData({ ...formData, maxValidityDays: Number(e.target.value) })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
               required
             />
-            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian tối đa của một file được lưu trên hệ thống.</span>
-          </div>
-
-          {/* Default validity days */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-bold text-gray-700 mb-1">
-              Thời gian lưu file mặc định (Ngày)
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={formData.defaultValidityDays}
-              onChange={(e) => setFormData({ ...formData, defaultValidityDays: Number(e.target.value) })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              required
-            />
-            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian mặc định của một file được lưu trên hệ thống.</span>
+            <span className="text-xs text-gray-400 mt-1 block">Khoảng thời gian tối đa của một file được lưu trên hệ thống</span>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-gray-100 flex justify-end">
+        <div className="pt-4 flex justify-end">
           <button
             type="submit"
             disabled={saving}
@@ -248,25 +230,25 @@ export default function AdminPolicyPage() {
         </div>
       </form>
 
-      {/* Form xác nhận */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-gray-100 p-6 space-y-5 animate-in zoom-in-95 duration-150">
-            {/* Header Flexbox căn đều nội dung và nút X */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-3 text-amber-600">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 gap-3">
+              <div className="flex items-center gap-3 text-amber-600 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100 shrink-0">
                   <lucideReact.AlertTriangle className="w-5 h-5 text-amber-600" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 leading-none">Xác nhận thay đổi ({changedFields.length} mục)</h3>
-                  <p className="text-xs text-gray-500 mt-1.5">Các thông số sau sẽ được cập nhật.</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 leading-none truncate">
+                    Xác nhận thay đổi ({changedFields.length} mục)
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1.5">Các thông số sau đây sẽ được cập nhật</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer -mr-1 shrink-0"
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
               >
                 <lucideReact.X className="w-5 h-5" />
               </button>
@@ -274,9 +256,9 @@ export default function AdminPolicyPage() {
 
             <div className="bg-gray-50 rounded-xl border border-gray-200 divide-y divide-gray-200/60 text-xs">
               {changedFields.map((field) => (
-                <div key={field.key} className="p-3 flex justify-between items-center">
+                <div key={field.key} className="p-3 flex justify-between items-center gap-2">
                   <span className="text-gray-600 font-medium">{field.label}:</span>
-                  <span className="font-semibold text-gray-900 flex items-center gap-1.5">
+                  <span className="font-semibold text-gray-900 flex items-center gap-1.5 shrink-0">
                     <span className="text-gray-400 line-through">
                       {currentPolicy[field.key]} {field.unit}
                     </span>

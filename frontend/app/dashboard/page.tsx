@@ -138,7 +138,7 @@ export default function DashboardPage() {
       setFileData(filesRes);
       setIsAuthenticated(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Không thể tải dữ liệu hệ thống.");
+      setError(err.response?.data?.message || "Không thể tải dữ liệu hệ thống");
       if (err.response?.status === 401) {
         window.location.href = "/login";
       }
@@ -197,11 +197,11 @@ export default function DashboardPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-green-50 text-green-700 border border-green-200">Hoạt động</span>;
+        return <span className="px-2.5 py-1 text-xs rounded-md font-semibold bg-green-50 text-green-700 border border-green-200">Hoạt động</span>;
       case "pending":
-        return <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 border border-amber-200">Chờ hiệu lực</span>;
+        return <span className="px-2.5 py-1 text-xs rounded-md font-semibold bg-amber-50 text-amber-700 border border-amber-200">Chờ hiệu lực</span>;
       default:
-        return <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-red-50 text-red-700 border border-red-200">Hết hạn</span>;
+        return <span className="px-2.5 py-1 text-xs rounded-md font-semibold bg-red-50 text-red-700 border border-red-200">Hết hạn</span>;
     }
   };
 
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Đã xảy ra lỗi khi tải file.";
+      const msg = error.response?.data?.message || "Đã xảy ra lỗi khi tải file";
       alert(msg);
     }
   };
@@ -269,7 +269,7 @@ export default function DashboardPage() {
       await fileService.deleteFile(targetId);
       fetchFilesOnly();
     } catch {
-      alert("Không thể xóa file này.");
+      alert("Không thể xóa file này");
     }
   };
 
@@ -282,7 +282,7 @@ export default function DashboardPage() {
       setSelectedFileIds([]);
       fetchFilesOnly();
     } catch {
-      alert("Đã xảy ra lỗi trong quá trình xóa một số file.");
+      alert("Đã xảy ra lỗi trong quá trình xóa một số file");
     } finally {
       setBatchActionLoading(false);
     }
@@ -307,17 +307,23 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8 pb-24">
 
       {/* Header & Upload Button */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trang chủ</h1>
-          <p className="text-sm text-gray-500">Tổng quan về thông tin và file của bạn</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+            Trang chủ
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            Tổng quan về thông tin và file của bạn
+          </p>
         </div>
+
         <button
+          type="button"
           onClick={() => setIsUploadOpen(true)}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-blue-600/20 whitespace-nowrap shrink-0 w-full sm:w-auto cursor-pointer"
         >
-          <lucideReact.FileUp className="w-4 h-4" />
-          Upload File
+          <lucideReact.FileUp className="w-4 h-4 shrink-0" />
+          <span>Upload File</span>
         </button>
       </div>
 
@@ -467,7 +473,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <table className="w-full text-left border-collapse text-sm text-gray-600">
+          <table className="w-full min-w-212.5 text-left border-collapse text-sm text-gray-600 whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-700 font-medium text-xs border-b border-gray-100 uppercase tracking-wider">
               <tr>
                 <th className="p-4 w-10">
@@ -534,7 +540,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex gap-1.5 items-center justify-center">
-                          <span className={`px-2 py-0.5 text-xs rounded ${file.isPublic ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-purple-50 text-purple-600 border border-purple-100"}`}>
+                          <span className={`px-2.5 py-1 text-xs rounded-md font-semibold ${file.isPublic ? "bg-blue-50 text-blue-700 border border-blue-100" : "bg-purple-50 text-purple-700 border border-purple-100"}`}>
                             {file.isPublic ? "Công khai" : "Riêng tư"}
                           </span>
                           {file.hasPassword && (
@@ -558,57 +564,59 @@ export default function DashboardPage() {
                         {getRemainingTimeBadge(file)}
                       </td>
 
-                      <td className="p-4 text-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedFileId(file.id)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xem thông tin chi tiết của file"
-                        >
-                          <lucideReact.Info className="w-4 h-4" />
-                        </button>
+                      <td className="p-4 text-center">
+                        <div className="inline-flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFileId(file.id)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xem thông tin chi tiết của file"
+                          >
+                            <lucideReact.Info className="w-4 h-4" />
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xem trước file"
-                        >
-                          <lucideReact.Eye className="w-4 h-4" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => window.open(`/f/${file.shareToken}`, "_blank")}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xem trước file"
+                          >
+                            <lucideReact.Eye className="w-4 h-4" />
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadSingleFile(file)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-green-50 text-gray-500 hover:text-green-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Tải file"
-                        >
-                          <lucideReact.Download className="w-4 h-4" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadSingleFile(file)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-green-50 text-gray-500 hover:text-green-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Tải file"
+                          >
+                            <lucideReact.Download className="w-4 h-4" />
+                          </button>
 
-                        <button
-                          onClick={() => handleCopyLink(file)}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-purple-50 text-gray-500 hover:text-purple-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Sao chép link chia sẻ"
-                        >
-                          {copiedId === file.id ? (
-                            <lucideReact.Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
-                          ) : (
-                            <lucideReact.Link2 className="w-4 h-4" />
-                          )}
-                        </button>
+                          <button
+                            onClick={() => handleCopyLink(file)}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-purple-50 text-gray-500 hover:text-purple-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Sao chép link chia sẻ"
+                          >
+                            {copiedId === file.id ? (
+                              <lucideReact.Check className="w-4 h-4 text-green-600 animate-in zoom-in" />
+                            ) : (
+                              <lucideReact.Link2 className="w-4 h-4" />
+                            )}
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFileToDelete({ id: file.id, name: file.fileName });
-                            setDeleteModalOpen(true);
-                          }}
-                          className="inline-flex p-1.5 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                          title="Xóa file"
-                        >
-                          <lucideReact.Trash2 className="w-4 h-4" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFileToDelete({ id: file.id, name: file.fileName });
+                              setDeleteModalOpen(true);
+                            }}
+                            className="inline-flex p-1.5 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                            title="Xóa file"
+                          >
+                            <lucideReact.Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -616,7 +624,7 @@ export default function DashboardPage() {
               ) : (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-gray-400">
-                    Không có file nào.
+                    Không có file nào
                   </td>
                 </tr>
               )}
@@ -680,7 +688,7 @@ export default function DashboardPage() {
       {selectedFileIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md border border-gray-200 text-gray-800 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
 
-          {/* Số lượng đã chọn */}
+          {/* Số lượng file đã chọn */}
           <div className="flex items-center gap-2 pr-3 border-r border-gray-200">
             <span className="text-sm font-semibold text-gray-700">Đã chọn</span>
             <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">

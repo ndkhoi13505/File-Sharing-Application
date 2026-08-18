@@ -28,7 +28,7 @@ export default function TOTPLoginModal({ isOpen, cid, onSuccess, onCancel }: TOT
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
-      setErrorMsg("Vui lòng nhập đủ 6 chữ số.");
+      setErrorMsg("Vui lòng nhập đủ 6 chữ số");
       return;
     }
 
@@ -38,8 +38,8 @@ export default function TOTPLoginModal({ isOpen, cid, onSuccess, onCancel }: TOT
       const res = await authService.verifyLoginTOTP({ cid, code });
       onSuccess(res.accessToken);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || "Mã xác thực không đúng hoặc phiên đăng nhập đã hết hạn.";
-      setErrorMsg(typeof msg === "string" ? msg : "Mã xác thực không hợp lệ.");
+      const msg = err.response?.data?.message || err.response?.data?.error || "Mã xác thực không đúng hoặc phiên đăng nhập đã hết hạn";
+      setErrorMsg(typeof msg === "string" ? msg : "Mã xác thực không hợp lệ");
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function TOTPLoginModal({ isOpen, cid, onSuccess, onCancel }: TOT
 
         <form onSubmit={handleVerify} className="space-y-4">
           <p className="text-sm text-gray-600 leading-relaxed">
-            Tài khoản của bạn đã bật bảo mật 2 lớp. Hãy mở ứng dụng xác thực trên điện thoại và nhập mã 6 số:
+            Tài khoản của bạn đã bật bảo mật 2 lớp. Hãy mở ứng dụng xác thực và nhập mã 6 chữ số:
           </p>
 
           {errorMsg && (
@@ -103,7 +103,7 @@ export default function TOTPLoginModal({ isOpen, cid, onSuccess, onCancel }: TOT
               onClick={onCancel}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
             >
-              Hủy bỏ
+              Hủy
             </button>
             <button
               type="submit"

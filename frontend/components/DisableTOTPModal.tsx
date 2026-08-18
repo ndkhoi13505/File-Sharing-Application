@@ -27,7 +27,7 @@ export default function DisableTOTPModal({ isOpen, onClose, onSuccess }: Disable
   const handleDisable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
-      setErrorMsg("Vui lòng nhập đủ 6 chữ số.");
+      setErrorMsg("Vui lòng nhập đủ 6 chữ số");
       return;
     }
 
@@ -38,7 +38,7 @@ export default function DisableTOTPModal({ isOpen, onClose, onSuccess }: Disable
       onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Mã xác thực không chính xác hoặc đã hết hạn.");
+      setErrorMsg(err.response?.data?.message || "Mã xác thực không chính xác hoặc đã hết hạn");
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ export default function DisableTOTPModal({ isOpen, onClose, onSuccess }: Disable
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors cursor-pointer"
             >
-              Hủy bỏ
+              Hủy
             </button>
             <button
               type="submit"

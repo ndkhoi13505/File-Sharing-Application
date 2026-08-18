@@ -2,45 +2,42 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import * as lucideReact from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside
-        className={`transition-all duration-300 ease-in-out border-r border-gray-200 bg-white ${isSidebarOpen ? "w-64" : "w-0 -translate-x-full overflow-hidden border-none"
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar
+        isOpenMobile={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+        isCollapsedDesktop={desktopCollapsed}
+        onToggleDesktop={() => setDesktopCollapsed(!desktopCollapsed)}
+      />
+
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${desktopCollapsed ? "lg:pl-20" : "lg:pl-64"
           }`}
       >
-        <div className="w-64">
-          <Sidebar />
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <header className="h-16 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-14 bg-white border-b border-gray-200 px-4 flex items-center justify-between lg:hidden shrink-0">
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer flex items-center gap-2 text-sm font-medium"
-            title={isSidebarOpen ? "Thu gọn" : "Mở rộng"}
+            onClick={() => setMobileOpen(true)}
+            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+            aria-label="Mở menu"
           >
-            {isSidebarOpen ? (
-              <PanelLeftClose className="w-5 h-5" />
-            ) : (
-              <PanelLeftOpen className="w-5 h-5" />
-            )}
-            <span className="hidden sm:inline text-xs text-gray-500">
-              {isSidebarOpen ? "Thu gọn" : "Mở rộng"}
-            </span>
+            <lucideReact.Menu className="w-5 h-5" />
           </button>
+          <span className="font-bold text-gray-900 text-base">File Sharing</span>
+          <div className="w-5" />
         </header>
 
-        <main className="flex-1">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

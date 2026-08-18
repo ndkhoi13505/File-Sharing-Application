@@ -23,7 +23,7 @@ export default function RegisterPage() {
     setSuccess("");
 
     if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không trùng khớp.");
+      setError("Mật khẩu xác nhận không trùng khớp");
       return;
     }
 
@@ -54,7 +54,7 @@ export default function RegisterPage() {
       } else if (typeof backendError === "string") {
         setError(backendError);
       } else {
-        setError("Đăng ký thất bại. Vui lòng thử lại.");
+        setError("Đăng ký tài khoản thất bại. Vui lòng thử lại");
       }
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="w-full space-y-6 rounded-2xl bg-white p-8 shadow-sm border border-gray-200">
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-black">Đăng ký tài khoản mới</h2>
-            <p className="text-sm text-gray-500">Bắt đầu chia sẻ file của bạn với File Sharing.</p>
+            <p className="text-sm text-gray-500">Bắt đầu chia sẻ file của bạn với File Sharing</p>
           </div>
 
           {error && (
@@ -86,7 +86,7 @@ export default function RegisterPage() {
 
           {success && (
             <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-600 text-center font-medium">
-              Đăng kí tài khoản thành công. Tự động chuyển hướng sang trang đăng nhập sau <span className="font-bold text-sm text-green-700">{countdown}</span> giây.
+              Đăng kí tài khoản thành công. Tự động chuyển hướng sang trang đăng nhập sau <span className="font-bold text-sm text-green-700">{countdown}</span> giây
             </div>
           )}
 
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  title={showConfirmPassword ? "Ẩn xác nhận mật khẩu" : "Hiện xác nhận mật khẩu"}
+                  title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-xl bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-700 shadow-lg shadow-blue-600/10 disabled:bg-gray-400 cursor-pointer"
           >
-            {loading ? "Đang xử lý..." : "Đăng ký ngay"}
+            {loading ? "Đang xử lý..." : "Đăng ký"}
           </button>
 
           <div className="text-center pt-2 border-t border-gray-100">
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                 href="/login"
                 className="font-semibold text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-4"
               >
-                Đăng nhập tại đây
+                Đăng nhập
               </Link>
             </p>
           </div>

@@ -30,7 +30,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     setSuccessMsg("");
 
     if (newPassword !== confirmPassword) {
-      setErrorMsg("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+      setErrorMsg("Mật khẩu mới và xác nhận mật khẩu không khớp");
       return;
     }
 
@@ -41,14 +41,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         new_password: newPassword,
       });
 
-      setSuccessMsg("Đổi mật khẩu thành công!");
+      setSuccessMsg("Đổi mật khẩu thành công");
       setTimeout(() => {
         localStorage.removeItem("token");
         window.location.href = "/login";
       }, 2000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || "Đã xảy ra lỗi khi đổi mật khẩu.";
-      setErrorMsg(typeof msg === "string" ? msg : "Mật khẩu cũ không chính xác.");
+      const msg = err.response?.data?.message || err.response?.data?.error || "Đã xảy ra lỗi khi đổi mật khẩu";
+      setErrorMsg(typeof msg === "string" ? msg : "Mật khẩu cũ không chính xác");
     } finally {
       setLoading(false);
     }

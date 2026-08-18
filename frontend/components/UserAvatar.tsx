@@ -42,7 +42,7 @@ export default function UserAvatar({
 
   return (
     <div
-      className={`${sizeClasses[size]} bg-gradient-to-br ${gradientClass} text-white rounded-full flex items-center justify-center shadow-sm select-none border-2 border-white ${className}`}
+      className={`${sizeClasses[size]} bg-linear-to-br ${gradientClass} text-white rounded-full flex items-center justify-center shadow-sm select-none border-2 border-white ${className}`}
     >
       {firstLetter}
     </div>

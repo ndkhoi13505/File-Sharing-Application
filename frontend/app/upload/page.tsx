@@ -105,7 +105,7 @@ export default function UploadPage() {
 
         {/* System Policy */}
         {policy && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 sm:p-5">
+          <div className="mb-6 bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3 text-blue-900 font-semibold text-sm">
               <lucideReact.Info className="w-4 h-4 text-blue-600" />
               <span>Quy định hiện tại của hệ thống</span>
@@ -114,7 +114,7 @@ export default function UploadPage() {
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
               <div className="bg-white/80 backdrop-blur rounded-xl p-3 border border-blue-100/50 flex flex-col justify-between">
                 <div className="flex items-center text-gray-500 mb-1 gap-1.5">
-                  <lucideReact.HardDrive className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <lucideReact.HardDrive className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Dung lượng file tối đa</span>
                 </div>
                 <div className="text-base font-bold text-gray-900">{policy.MaxFileSizeMB} MB</div>
@@ -122,7 +122,7 @@ export default function UploadPage() {
 
               <div className="bg-white/80 backdrop-blur rounded-xl p-3 border border-blue-100/50 flex flex-col justify-between">
                 <div className="flex items-center text-gray-500 mb-1 gap-1.5">
-                  <lucideReact.Calendar className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <lucideReact.Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Thời gian lưu mặc định</span>
                 </div>
                 <div className="text-base font-bold text-gray-900">{policy.DefaultValidityDays} ngày</div>
@@ -130,7 +130,7 @@ export default function UploadPage() {
 
               <div className="bg-white/80 backdrop-blur rounded-xl p-3 border border-blue-100/50 flex flex-col justify-between">
                 <div className="flex items-center text-gray-500 mb-1 gap-1.5">
-                  <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Thời gian lưu tối thiểu</span>
                 </div>
                 <div className="text-base font-bold text-gray-900">{policy.MinValidityHours} tiếng</div>
@@ -138,7 +138,7 @@ export default function UploadPage() {
 
               <div className="bg-white/80 backdrop-blur rounded-xl p-3 border border-blue-100/50 flex flex-col justify-between">
                 <div className="flex items-center text-gray-500 mb-1 gap-1.5">
-                  <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <lucideReact.Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Thời gian lưu tối đa</span>
                 </div>
                 <div className="text-base font-bold text-gray-900">{policy.MaxValidityDays} ngày</div>
@@ -151,13 +151,13 @@ export default function UploadPage() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Upload File Nhanh</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Chia sẻ tập tin công khai.
+              Chia sẻ file công khai
             </p>
           </div>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm">
-              <lucideReact.AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <lucideReact.AlertCircle className="w-5 h-5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -167,7 +167,7 @@ export default function UploadPage() {
               <lucideReact.CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Upload File Thành Công!</h2>
               <p className="text-gray-500 text-sm mb-6">
-                File <b>{result.file.fileName}</b> đã sẵn sàng để chia sẻ.
+                File <b>{result.file.fileName}</b> đã sẵn sàng để chia sẻ
               </p>
 
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 text-left">
@@ -216,7 +216,7 @@ export default function UploadPage() {
             </div>
           ) : (
             <form onSubmit={handlePreSubmit} className="space-y-6">
-              {/* Chọn Tập tin */}
+              {/* Chọn File */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Chọn file</label>
                 <div className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-2xl p-6 text-center cursor-pointer relative bg-gray-50/50 transition-colors">
@@ -243,13 +243,13 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {/* Thông báo quyền truy cập công khai mặc định */}
+              {/* Quyền truy cập công khai mặc định */}
               <div className="flex items-center gap-3 p-4 bg-blue-50/60 rounded-xl border border-blue-100">
                 <lucideReact.Globe className="w-5 h-5 text-blue-600 shrink-0" />
                 <div>
                   <h4 className="text-sm font-semibold text-gray-900">Quyền truy cập: Công khai</h4>
                   <p className="text-xs text-gray-500">
-                    Chế độ tải lên ẩn danh luôn tạo link chia sẻ công khai.
+                    Chế độ tải lên ẩn danh luôn tạo link chia sẻ công khai
                   </p>
                 </div>
               </div>
@@ -344,7 +344,7 @@ export default function UploadPage() {
                     Lưu ý quan trọng:
                   </p>
                   <p>
-                    Các cài đặt cho file sau khi tải lên sẽ <b className="underline">không thể chỉnh sửa</b>. Vui lòng kiểm tra kỹ thông tin trước khi upload!
+                    Các cài đặt cho file sau khi tải lên sẽ <b className="underline">không thể chỉnh sửa</b>. Vui lòng kiểm tra kỹ thông tin trước khi upload
                   </p>
                 </div>
 
@@ -353,7 +353,7 @@ export default function UploadPage() {
                     <span className="text-gray-500 flex items-center gap-1.5">
                       <lucideReact.FileText className="w-4 h-4 text-gray-400" /> Tên file:
                     </span>
-                    <span className="font-semibold text-gray-900 truncate max-w-[240px]">{file?.name}</span>
+                    <span className="font-semibold text-gray-900 truncate max-w-60">{file?.name}</span>
                   </div>
 
                   <div className="flex justify-between items-center py-1 border-b border-gray-200/60">
@@ -397,14 +397,14 @@ export default function UploadPage() {
                   onClick={() => setShowConfirmModal(false)}
                   className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium cursor-pointer transition-colors"
                 >
-                  Quay lại chỉnh sửa
+                  Quay lại
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmedUpload}
                   className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 cursor-pointer transition-colors"
                 >
-                  Xác nhận & Tải lên
+                  Xác nhận
                 </button>
               </div>
             </div>
