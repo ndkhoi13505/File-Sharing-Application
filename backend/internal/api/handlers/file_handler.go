@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,11 +19,7 @@ import (
 type FileHandler struct {
 	file_service service.FileService
 }
-///////////////////////////////////////////////
-type ShareFileRequest struct {
-	UserIDs []string `json:"sharedWith" binding:"required"`
-}
-//////////////////////////////////////////////
+
 func NewFileHandler(file_service service.FileService) *FileHandler {
 	return &FileHandler{
 		file_service: file_service,
@@ -45,13 +40,6 @@ func (fh *FileHandler) UploadFile(ctx *gin.Context) {
 	if err := ctx.ShouldBind(&req); err != nil {
 		utils.ResponseValidator(ctx, validation.HandleValidationErrors(err))
 		return
-	}
-
-	// 🌟 1. ĐỌC TRỰC TIẾP VALIDITYDAYS TỪ MULTIPART FORM-DATA VÀ GÁN VÀO DTO
-	if validityDaysStr := ctx.PostForm("validityDays"); validityDaysStr != "" {
-		if days, err := strconv.Atoi(validityDaysStr); err == nil {
-			req.ValidityDays = days
-		}
 	}
 
 	if req.Password != nil {
@@ -92,6 +80,7 @@ func (fh *FileHandler) UploadFile(ctx *gin.Context) {
 		"isPublic":   uploadedFile.IsPublic,
 	}
 
+	//utils.ResponseSuccess(ctx, http.StatusCreated, "File uploaded successfully", gin.H{"file": response})
 	ctx.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"file":    response,
@@ -167,19 +156,13 @@ func (fh *FileHandler) GetFileInfo(ctx *gin.Context) {
 		userID = ""
 	}
 
-	// 🌟 Đọc mật khẩu từ Query Param (trên URL ?password=...) hoặc Header
-    password := ctx.Query("password")
-    if password == "" {
-        password = ctx.GetHeader("X-File-Password")
-    }
-
 	var file *domain.File = nil
 	var err *utils.ReturnStatus = nil
 
 	if uuid.Validate(ident) == nil {
-		file, _, _, err = fh.file_service.GetFileInfoID(ctx, ident, userID.(string), password, false)
+		file, _, _, err = fh.file_service.GetFileInfoID(ctx, ident, userID.(string), false)
 	} else {
-		file, _, _, err = fh.file_service.GetFileInfo(ctx, ident, userID.(string), password, false)
+		file, _, _, err = fh.file_service.GetFileInfo(ctx, ident, userID.(string), false)
 	}
 
 	if err != nil {
@@ -218,9 +201,9 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 	shared := []string{}
 
 	if uuid.Validate(ident) == nil {
-		file, owner, shared, err = fh.file_service.GetFileInfoID(ctx, ident, userID.(string), "", true)
+		file, owner, shared, err = fh.file_service.GetFileInfoID(ctx, ident, userID.(string), true)
 	} else {
-		file, owner, shared, err = fh.file_service.GetFileInfo(ctx, ident, userID.(string), "", true)
+		file, owner, shared, err = fh.file_service.GetFileInfo(ctx, ident, userID.(string), true)
 	}
 
 	if err != nil {
@@ -268,69 +251,26 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 	})
 }
 
-func (fh *FileHandler) getFileData(ctx *gin.Context, isDownload bool) (*domain.File, []byte, *utils.ReturnStatus) {
-	fmt.Println("\n=================== [HANDLER] GET FILE DATA ===================")
-
-	ident := ctx.Param("shareToken")
-	if ident == "" {
-		ident = ctx.Param("id")
+func (fh *FileHandler) getFileData(ctx *gin.Context, registerDownload bool) (*domain.File, []byte, *utils.ReturnStatus) {
+	fileToken := ctx.Param("shareToken")
+	password := ctx.GetHeader("X-File-Password")
+	userIDptr, exists := ctx.Get("userID")
+	var userID string = ""
+	if exists {
+		userID = userIDptr.(string)
 	}
 
-	userID, exists := ctx.Get("userID")
-	if !exists {
-		userID = ""
+	info, file, download_err := fh.file_service.DownloadFile(ctx, fileToken, userID, password, registerDownload)
+	if download_err != nil {
+		return nil, nil, download_err
 	}
 
-	// 1. LẤY PASSWORD TỪ QUERY PARAM (?password=...) HOẶC HEADER
-	password := ctx.Query("password")
-	if password == "" {
-		password = ctx.GetHeader("X-File-Password")
+	fileBytes, readerr := io.ReadAll(file)
+	if readerr != nil {
+		return nil, nil, utils.ResponseMsg(utils.ErrCodeInternal, readerr.Error())
 	}
 
-	fmt.Printf("👉 ShareToken/ID: '%s'\n", ident)
-	fmt.Printf("👉 UserID tu JWT: '%v' (exists: %v)\n", userID, exists)
-	fmt.Printf("👉 Password doc tu Request: '%s'\n", password)
-
-	var fileInfo *domain.File
-	var err *utils.ReturnStatus
-
-	// 2. GỌI SERVICE KIỂM TRA QUYỀN VÀ MẬT KHẨU
-	if uuid.Validate(ident) == nil {
-		fmt.Println("➡️ Identity la UUID -> Goi GetFileInfoID")
-		fileInfo, _, _, err = fh.file_service.GetFileInfoID(ctx, ident, userID.(string), password, false)
-	} else {
-		fmt.Println("➡️ Identity la ShareToken -> Goi GetFileInfo")
-		fileInfo, _, _, err = fh.file_service.GetFileInfo(ctx, ident, userID.(string), password, false)
-	}
-
-	if err != nil {
-		fmt.Println("❌ LOI TU SERVICE:", err)
-		fmt.Println("===============================================================\n")
-		return nil, nil, err
-	}
-
-	fmt.Printf("✅ SERVICE CAP QUYEN THANH CONG! File Name: '%s'\n", fileInfo.FileName)
-
-	// 3. TẢI/ĐỌC NỘI DUNG FILE
-	fileInfo, reader, errDownload := fh.file_service.DownloadFile(ctx, fileInfo.ShareToken, userID.(string), password, isDownload)
-	if errDownload != nil {
-		fmt.Println("❌ LOI DOWNLOAD FILE:", errDownload)
-		fmt.Println("===============================================================\n")
-		return nil, nil, errDownload
-	}
-
-	// Đọc reader ra byte array
-	fileBytes, errRead := io.ReadAll(reader)
-	if errRead != nil {
-		fmt.Printf("❌ LOI READ ALL READER: %v\n", errRead)
-		fmt.Println("===============================================================\n")
-		return nil, nil, utils.ResponseMsg(utils.ErrCodeInternal, "Failed to read file content")
-	}
-
-	fmt.Printf("🎉 DOC FILE THANH CONG! Dung luong read: %d bytes\n", len(fileBytes))
-	fmt.Println("===============================================================\n")
-
-	return fileInfo, fileBytes, nil
+	return info, fileBytes, nil
 }
 
 func (fh *FileHandler) DownloadFile(ctx *gin.Context) {
@@ -461,28 +401,5 @@ func (fh *FileHandler) GetAccessibleFiles(ctx *gin.Context) {
 			"totalFiles":  len(files),
 			"limit":       limit,
 		},
-	})
-}
-//////////////////////////////////////////////
-func (fh *FileHandler) ShareFile(ctx *gin.Context) {
-	fileID := ctx.Param("id")
-	
-	var req ShareFileRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.ResponseValidator(ctx, validation.HandleValidationErrors(err))
-		return
-	}
-
-	userID, _ := ctx.Get("userID")
-
-	err := fh.file_service.ShareFileWithUsers(ctx, fileID, userID.(string), req.UserIDs)
-	if err != nil {
-		err.Export(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Chia sẻ file thành công",
 	})
 }

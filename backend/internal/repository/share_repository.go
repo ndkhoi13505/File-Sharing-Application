@@ -29,67 +29,54 @@ func (r *sharedRepository) ShareFileWithUsers(ctx context.Context, fileID string
 		return nil
 	}
 
-	// 1. Tạo Query động an toàn với Prepared Arguments ($1, $2, ...)
-	placeholders := make([]string, len(emails))
-	args := make([]interface{}, len(emails))
-	for i, e := range emails {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-		args[i] = e
+	var emailstrings []string
+	for _, e := range emails {
+		emailstrings = append(emailstrings, fmt.Sprintf("'%s'", e))
 	}
 
-	userIDQuery := fmt.Sprintf(`SELECT id FROM users WHERE email IN (%s);`, strings.Join(placeholders, ", "))
+	userIDQuery := fmt.Sprintf(`SELECT id FROM users WHERE email IN (%s);`, strings.Join(emailstrings, ", "))
 
-	rows, err := r.db.QueryContext(ctx, userIDQuery, args...)
+	userIDsRaw, err := r.db.QueryContext(ctx, userIDQuery)
 	if err != nil {
-		log.Println("🔥 Lỗi query User ID từ Email:", err)
+		log.Println("Email retrieval failure")
 		return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
-	defer rows.Close()
 
-	var userIDs []string
-	for rows.Next() {
-		var uid string
-		if err := rows.Scan(&uid); err != nil {
-			log.Println("🔥 Lỗi scan User ID:", err)
+	var queryValues []string
+	for userIDsRaw.Next() {
+		var userid_tmp string
+		if err := userIDsRaw.Scan(&userid_tmp); err != nil {
+			log.Println("Email scan failure")
 			return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
-		userIDs = append(userIDs, uid)
+
+		queryValues = append(queryValues, fmt.Sprintf("('%s', '%s')", userid_tmp, fileID))
 	}
 
-	// Nếu không tìm thấy User ID nào tương ứng với Email đã nhập
-	if len(userIDs) == 0 {
-		log.Println("⚠️ Không tìm thấy người dùng nào phù hợp với danh sách Email cung cấp.")
+	if len(queryValues) == 0 {
 		return nil
 	}
 
-	// 2. Thêm vào bảng shared bằng parameterized insert
-	valueStrings := make([]string, 0, len(userIDs))
-	valueArgs := make([]interface{}, 0, len(userIDs)*2)
-	
-	argPos := 1
-	for _, uid := range userIDs {
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d)", argPos, argPos+1))
-		valueArgs = append(valueArgs, uid, fileID)
-		argPos += 2
-	}
-
-	insertQuery := fmt.Sprintf(`
+	query := fmt.Sprintf(`
 		INSERT INTO shared (user_id, file_id)
 		VALUES %s
 		ON CONFLICT (user_id, file_id) DO NOTHING
-	`, strings.Join(valueStrings, ", "))
+	`, strings.Join(queryValues, ", "))
 
-	if _, err := r.db.ExecContext(ctx, insertQuery, valueArgs...); err != nil {
-		log.Println("🔥 Lỗi INSERT vào bảng shared:", err)
+	if _, err := r.db.ExecContext(ctx, query); err != nil {
+		log.Println("INSERT failure")
 		return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
-	log.Println("✅ Chia sẻ file thành công vào Database!")
 	return nil
 }
 
 func (r *sharedRepository) GetUsersSharedWith(ctx context.Context, fileID string) (*domain.Shared, *utils.ReturnStatus) {
-	query := `SELECT user_id FROM shared WHERE file_id = $1`
+	// SELECT * FROM shared_with WHERE file_id = $1
+
+	query := `
+		SELECT user_id FROM shared WHERE file_id = $1
+	`
 
 	share := domain.Shared{
 		FileId:  fileID,
@@ -101,14 +88,15 @@ func (r *sharedRepository) GetUsersSharedWith(ctx context.Context, fileID string
 		log.Println(err)
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var userid_tmp string
+
 		if err := rows.Scan(&userid_tmp); err != nil {
 			log.Println(err)
 			return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
+
 		share.UserIds = append(share.UserIds, userid_tmp)
 	}
 

@@ -42,23 +42,13 @@ func NewFileService(cfg *config.Config, fr repository.FileRepository, sr reposit
 // Hàm tính toán thời gian hiệu lực
 func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time, time.Time, int, *utils.ReturnStatus) {
 	now := time.Now().UTC()
-	policy := s.cfg.Policy
+	policy := s.cfg.Policy // Policy tĩnh
 
 	var availableFrom, availableTo time.Time
 	var validityDays int
 
-	// 1. Trường hợp chọn Vĩnh viễn (0 ngày)
-	if req.ValidityDays == 0 && req.AvailableTo == nil {
-		availableFrom = now
-		availableTo = time.Date(2099, 12, 31, 23, 59, 59, 0, time.UTC)
-		return availableFrom, availableTo, 0, nil
-	}
-
-	// 2. Trường hợp chọn theo số ngày (1, 3, 7, 30 ngày)
-	if req.ValidityDays > 0 && req.AvailableTo == nil {
-		availableFrom = now
-		availableTo = now.Add(time.Hour * 24 * time.Duration(req.ValidityDays))
-	} else if req.AvailableFrom != nil && req.AvailableTo != nil {
+	// 1. Tính toán availableFrom và availableTo
+	if req.AvailableFrom != nil && req.AvailableTo != nil {
 		availableFrom = *req.AvailableFrom
 		availableTo = *req.AvailableTo
 	} else if req.AvailableTo != nil {
@@ -72,7 +62,8 @@ func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time
 		availableTo = now.Add(time.Hour * 24 * time.Duration(policy.DefaultValidityDays))
 	}
 
-	// 3. Validation thời hạn
+	// 2. Validation
+	// a. FROM < TO
 	if availableFrom.After(availableTo) {
 		return time.Time{}, time.Time{}, 0, utils.ResponseMsg(utils.ErrCodeBadRequest, "AvailableFrom cannot be after AvailableTo")
 	}
@@ -80,14 +71,14 @@ func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time
 	duration := availableTo.Sub(availableFrom)
 	validityDays = int(duration.Hours() / 24)
 
+	// b. Khoảng cách tối thiểu/tối đa
 	minDuration := time.Duration(policy.MinValidityHours) * time.Hour
 	maxDuration := time.Duration(policy.MaxValidityDays) * 24 * time.Hour
 
 	if duration < minDuration {
 		return time.Time{}, time.Time{}, 0, utils.ResponseMsg(utils.ErrCodeBadRequest, fmt.Sprintf("Validity period must be at least %d hours", policy.MinValidityHours))
 	}
-	// Bỏ qua check MaxDuration nếu đặt là Vĩnh viễn (năm 2099)
-	if duration > maxDuration && availableTo.Year() < 2090 && policy.MaxValidityDays > 0 {
+	if duration > maxDuration {
 		return time.Time{}, time.Time{}, 0, utils.ResponseMsg(utils.ErrCodeBadRequest, fmt.Sprintf("Validity period cannot exceed %d days", policy.MaxValidityDays))
 	}
 
@@ -211,13 +202,9 @@ func (s *fileService) GetMyFiles(ctx context.Context, userID string, params doma
 		out = append(out, gin.H{
 			"id":         f.Id,
 			"fileName":   f.FileName,
-			"fileSize":   f.FileSize,
 			"shareToken": f.ShareToken,
 			"status":     f.Status,
 			"createdAt":  f.CreatedAt,
-			"isPublic":   f.IsPublic,
-			"availableFrom": f.AvailableFrom, // 🌟 BỔ SUNG DÒNG NÀY
-            "availableTo":   f.AvailableTo,
 		})
 	}
 
@@ -267,8 +254,7 @@ func (s *fileService) DeleteFile(ctx context.Context, fileID string, userID stri
 	return nil
 }
 
-// 🌟 1. Bổ sung tham số password string vào signature hàm
-func (s *fileService) getFileInfo(ctx context.Context, id string, userID string, password string, isToken bool, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
+func (s *fileService) getFileInfo(ctx context.Context, id string, userID string, isToken bool, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
 	var file *domain.File = nil
 	var err *utils.ReturnStatus = nil
 	if isToken {
@@ -311,69 +297,39 @@ func (s *fileService) getFileInfo(ctx context.Context, id string, userID string,
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	if !isAdmin {
-	if verbose && (file.OwnerId == nil || *file.OwnerId != userID) {
-		return nil, nil, nil, utils.Response(utils.ErrCodeGetForbidden)
-	}
-
-	// 🌟 IN LOG RA TERMINAL DOCKER ĐỂ TRUY NGUYÊN NHÂN
-	fmt.Println("================ DEBUG PREVIEW ================")
-	fmt.Printf("👉 File ID: %s | IsPublic: %v | HasPassword: %v\n", file.Id, file.IsPublic, file.HasPassword)
-	fmt.Printf("👉 UserID gui len: '%s'\n", userID)
-	fmt.Printf("👉 Password client gui len (password): '%s'\n", password)
-	if file.PasswordHash != nil {
-		fmt.Printf("👉 PasswordHash trong DB: '%s'\n", *file.PasswordHash)
-	} else {
-		fmt.Println("👉 PasswordHash trong DB: NIL (file không lưu pass/hoặc bị null)")
-	}
-
-	hasValidAccess := false
-
-	if file.IsPublic {
-		fmt.Println("✅ Cho qua: File IsPublic = true")
-		hasValidAccess = true
-	}
-
-	if file.OwnerId != nil && *file.OwnerId == userID {
-		fmt.Println("✅ Cho qua: User la Owner")
-		hasValidAccess = true
-	} else if slices.Contains(shareds.UserIds, userID) {
-		fmt.Println("✅ Cho qua: User co trong danh sach Shared")
-		hasValidAccess = true
-	}
-
-	// Kiểm tra Mật khẩu
-	if password != "" {
-		if file.PasswordHash != nil {
-			// Thử so sánh bcrypt
-			errBcrypt := bcrypt.CompareHashAndPassword([]byte(*file.PasswordHash), []byte(password))
-			if errBcrypt == nil {
-				fmt.Println("✅ Cho qua: Bcrypt Password match thành công!")
-				hasValidAccess = true
-			} else {
-				fmt.Printf("❌ Bcrypt Compare That Bai: %v\n", errBcrypt)
-			}
-
-			// Thử so sánh Plain Text
-			if *file.PasswordHash == password {
-				fmt.Println("✅ Cho qua: Plain Text Password match thành công!")
-				hasValidAccess = true
-			}
-		} else {
-			fmt.Println("❌ PasswordHash trong DB đang bị NULL!")
+		if verbose && *file.OwnerId != userID {
+			return nil, nil, nil, utils.Response(utils.ErrCodeGetForbidden)
 		}
-	} else {
-		fmt.Println("⚠️ Client KHÔNG gửi password lên!")
-	}
 
-	if !hasValidAccess {
-		fmt.Println("🚫 KẾT QUẢ: Bị từ chối (ErrCodeGetForbidden - 403)!")
-		fmt.Println("===============================================")
-		return nil, nil, nil, utils.Response(utils.ErrCodeGetForbidden)
+		if !file.IsPublic && *file.OwnerId != userID {
+			if !slices.Contains(shareds.UserIds, userID) {
+				return nil, nil, nil, utils.Response(utils.ErrCodeGetForbidden)
+			}
+		}
+
+		if file.OwnerId == nil || *file.OwnerId != userID {
+			if file.Status == domain.FILE_EXPIRED {
+				return nil, nil, nil, utils.ResponseArgs(utils.ErrCodeFileExpired,
+					gin.H{
+						"error":     "File expired",
+						"expiredAt": file.AvailableTo,
+					},
+				)
+			}
+
+			if file.Status == domain.FILE_PENDING {
+				return nil, nil, nil, utils.ResponseArgs(utils.ErrCodeFileLocked,
+					gin.H{
+						"error":               "File not yet available",
+						"availableFrom":       file.AvailableFrom,
+						"hoursUntilAvailable": file.AvailableFrom.Sub(now).Hours(),
+					},
+				)
+			}
+		}
+
 	}
-	fmt.Println("===============================================")
-}
 
 	outShared := []string{}
 	for _, id := range shareds.UserIds {
@@ -389,16 +345,16 @@ func (s *fileService) getFileInfo(ctx context.Context, id string, userID string,
 	return file, owner, outShared, nil
 }
 
-func (s *fileService) GetFileInfo(ctx context.Context, token string, userID string, password string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
-	return s.getFileInfo(ctx, token, userID, password, true, verbose)
+func (s *fileService) GetFileInfo(ctx context.Context, token string, userID string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
+	return s.getFileInfo(ctx, token, userID, true, verbose)
 }
 
-func (s *fileService) GetFileInfoID(ctx context.Context, id string, userID string, password string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
-	return s.getFileInfo(ctx, id, userID, password, false, verbose)
+func (s *fileService) GetFileInfoID(ctx context.Context, id string, userID string, verbose bool) (*domain.File, *domain.User, []string, *utils.ReturnStatus) {
+	return s.getFileInfo(ctx, id, userID, false, verbose)
 }
 
 func (s *fileService) DownloadFile(ctx context.Context, token string, userID string, password string, registerDownload bool) (*domain.File, io.Reader, *utils.ReturnStatus) {
-	fileInfo, _, _, err := s.getFileInfo(ctx, token, userID, password, true, false)
+	fileInfo, _, _, err := s.getFileInfo(ctx, token, userID, true, false)
 
 	if err.IsErr() {
 		return nil, nil, err
@@ -561,20 +517,4 @@ func (s *fileService) GetAccessibleFiles(ctx context.Context, userID string, sea
 	}
 
 	return out, nil
-}
-///////////////////////////////////////////
-func (s *fileService) ShareFileWithUsers(ctx context.Context, fileID string, ownerID string, emails []string) *utils.ReturnStatus {
-    // 1. Kiểm tra file có tồn tại không
-    file, err := s.fileRepo.GetFileByID(ctx, fileID)
-    if err != nil || file == nil {
-        return utils.Response(utils.ErrCodeFileNotFound)
-    }
-
-    // 2. Kiểm tra xem người gọi API có phải là Chủ sở hữu (Owner) của file không
-    if file.OwnerId == nil || *file.OwnerId != ownerID {
-        return utils.Response(utils.ErrCodeGetForbidden)
-    }
-
-    // 3. Gọi trực tiếp hàm gốc trong sharedRepo của Thắng!
-    return s.sharedRepo.ShareFileWithUsers(ctx, fileID, emails)
 }

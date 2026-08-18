@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google"; 
 import "./globals.css";
+import Navbar from "@/components/Navibar";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -9,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "File Sharing",
+  title: "File Sharing - Hệ thống chia sẻ file",
   description: "Nền tảng chia sẻ file an toàn",
 };
 
@@ -23,8 +24,11 @@ export default function RootLayout({
       lang="vi"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans bg-gray-50 text-gray-900">
-        {children}
+      <body className="min-h-full flex flex-col font-sans bg-gray-50 text-gray-900">
+        <Navbar />
+        <main className="flex-grow pt-16">
+          {children}
+        </main>
       </body>
     </html>
   );
