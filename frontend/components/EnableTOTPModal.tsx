@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { authService } from "@/services/auth";
-import { X, ShieldCheck, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { copyToClipboard } from "@/utils/copy";
+import * as lucideReact from "lucide-react";
 
 interface EnableTOTPModalProps {
   isOpen: boolean;
@@ -42,23 +43,11 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
   };
 
   const handleCopySecret = async (secret: string) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(secret);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = secret;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        textArea.remove();
-      }
+    const ok = await copyToClipboard(secret);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       setErrorMsg("Không thể sao chép mã khóa");
     }
   };
@@ -93,7 +82,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
         <div className="flex justify-between items-center pb-3 border-b border-gray-100 gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <lucideReact.ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
@@ -106,14 +95,14 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
             className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer shrink-0"
             title="Đóng"
           >
-            <X className="w-5 h-5" />
+            <lucideReact.X className="w-5 h-5" />
           </button>
         </div>
 
         <div>
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-500 text-sm">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              <lucideReact.Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               <span>Đang tạo mã bảo mật...</span>
             </div>
           ) : setupData ? (
@@ -147,7 +136,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
                       : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
                       }`}
                   >
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? <lucideReact.Check className="w-3.5 h-3.5" /> : <lucideReact.Copy className="w-3.5 h-3.5" />}
                     <span>{copied ? "Đã chép" : "Sao chép"}</span>
                   </button>
                 </div>
@@ -155,7 +144,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
 
               {errorMsg && (
                 <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <lucideReact.AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
                   <span>{errorMsg}</span>
                 </div>
               )}
@@ -190,7 +179,7 @@ export default function EnableTOTPModal({ isOpen, onClose, onSuccess }: EnableTO
                     disabled={verifying || code.length !== 6}
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-600/20 flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    {verifying && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {verifying && <lucideReact.Loader2 className="w-4 h-4 animate-spin" />}
                     <span>Xác nhận</span>
                   </button>
                 </div>

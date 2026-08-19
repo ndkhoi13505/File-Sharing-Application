@@ -6,6 +6,7 @@ import apiClient from "@/services/api-client";
 import { authService } from "@/services/auth";
 import { adminService, AdminAllFilesResponse } from "@/services/admin";
 import { fileService } from "@/services/file";
+import { copyToClipboard } from "@/utils/copy";
 import FileInfoModal from "@/components/FileInfoModal";
 import * as lucideReact from "lucide-react";
 
@@ -127,11 +128,13 @@ export default function AdminAllFilesPage() {
     }
   };
 
-  const handleCopyLink = (file: any) => {
+  const handleCopyLink = async (file: any) => {
     const shareUrl = `${window.location.origin}/f/${file.shareToken}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedId(file.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    const ok = await copyToClipboard(shareUrl);
+    if (ok) {
+      setCopiedId(file.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   const promptPasswordViaModal = (fileItem: any, isRetry = false): Promise<string | null> => {

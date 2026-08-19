@@ -5,6 +5,7 @@ import * as lucideReact from "lucide-react";
 import { fileService } from "@/services/file";
 import { SystemPolicy, FileUploadResponse } from "@/types";
 import { formatFileSize } from "@/utils/format";
+import { copyToClipboard } from "@/utils/copy";
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -134,12 +135,14 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: UploadModalP
     return uploadResult.file.shareLink || "";
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const link = getShareUrl();
     if (!link) return;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyToClipboard(link);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

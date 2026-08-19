@@ -3,22 +3,8 @@
 import { useEffect, useState } from "react";
 import { fileService } from "@/services/file";
 import { formatMimeType, formatFileSize, formatDateTime } from "@/utils/format";
-import {
-    X,
-    Info,
-    BarChart2,
-    History,
-    Users,
-    CheckCircle2,
-    XCircle,
-    Copy,
-    Check,
-    ChevronLeft,
-    ChevronRight,
-    UserCheck,
-    Mail,
-    Shield
-} from "lucide-react";
+import { copyToClipboard } from "@/utils/copy";
+import * as lucideReact from "lucide-react";
 
 interface FileInfoModalProps {
     fileId: string | null;
@@ -81,12 +67,14 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
 
     if (!fileId) return null;
 
-    const handleCopyLink = () => {
+    const handleCopyLink = async () => {
         if (!fileDetail?.shareToken) return;
         const url = `${window.location.origin}/f/${fileDetail.shareToken}`;
-        navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        const ok = await copyToClipboard(url);
+        if (ok) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     const formatLastDownloadedAt = (dateStr?: string, downloadCount?: number) => {
@@ -102,7 +90,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                 <div className="flex justify-between items-center gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                            <Info className="w-4 h-4" />
+                            <lucideReact.Info className="w-4 h-4" />
                         </div>
                         <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate leading-tight" title={fileDetail?.fileName}>
                             {fileDetail?.fileName || "Thông tin file"}
@@ -113,7 +101,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                         className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors shrink-0"
                         title="Đóng"
                     >
-                        <X className="w-5 h-5" />
+                        <lucideReact.X className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -124,21 +112,21 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                         className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "info" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
-                        <Info className="w-4 h-4" /> Chi tiết File
+                        <lucideReact.Info className="w-4 h-4" /> Chi tiết File
                     </button>
                     <button
                         onClick={() => setActiveTab("stats")}
                         className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "stats" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
-                        <BarChart2 className="w-4 h-4" /> Thống kê lượt tải
+                        <lucideReact.BarChart2 className="w-4 h-4" /> Thống kê lượt tải
                     </button>
                     <button
                         onClick={() => setActiveTab("history")}
                         className={`flex items-center gap-2 py-3 px-3.5 text-xs sm:text-sm font-semibold border-b-2 cursor-pointer transition-colors shrink-0 ${activeTab === "history" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
-                        <History className="w-4 h-4" /> Lịch sử tải xuống
+                        <lucideReact.History className="w-4 h-4" /> Lịch sử tải xuống
                     </button>
                 </div>
 
@@ -169,7 +157,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                                    <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                                    <lucideReact.Mail className="w-3.5 h-3.5 text-gray-400" />
                                                     {fileDetail.owner?.email || "Không có email"}
                                                 </p>
                                             </div>
@@ -224,7 +212,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                     <div className="bg-gray-50 p-4.5 rounded-2xl border border-gray-200 space-y-2.5">
                                         <div className="flex items-center justify-between">
                                             <span className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                                                <Users className="w-4 h-4 text-blue-600" /> Danh sách tài khoản được chia sẻ:
+                                                <lucideReact.Users className="w-4 h-4 text-blue-600" /> Danh sách tài khoản được chia sẻ:
                                             </span>
                                             <span className="text-xs text-gray-500 font-medium">
                                                 {fileDetail.isPublic
@@ -271,7 +259,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                                 onClick={handleCopyLink}
                                                 className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition-colors whitespace-nowrap cursor-pointer shadow-xs"
                                             >
-                                                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                                {copied ? <lucideReact.Check className="w-4 h-4" /> : <lucideReact.Copy className="w-4 h-4" />}
                                                 {copied ? "Đã chép" : "Sao chép"}
                                             </button>
                                         </div>
@@ -340,11 +328,11 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                                             <div>
                                                                 {row.downloadCompleted ? (
                                                                     <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-semibold border border-emerald-200">
-                                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hoàn tất
+                                                                        <lucideReact.CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hoàn tất
                                                                     </span>
                                                                 ) : (
                                                                     <span className="inline-flex items-center gap-1 text-red-700 bg-red-50 px-2.5 py-1 rounded-lg text-xs font-semibold border border-red-200">
-                                                                        <XCircle className="w-3.5 h-3.5 text-red-600" /> Gián đoạn
+                                                                        <lucideReact.XCircle className="w-3.5 h-3.5 text-red-600" /> Gián đoạn
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -367,7 +355,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                                             className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
                                                             title="Trang trước"
                                                         >
-                                                            <ChevronLeft className="w-4 h-4" />
+                                                            <lucideReact.ChevronLeft className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             type="button"
@@ -376,7 +364,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                                             className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
                                                             title="Trang sau"
                                                         >
-                                                            <ChevronRight className="w-4 h-4" />
+                                                            <lucideReact.ChevronRight className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 </div>

@@ -6,6 +6,7 @@ import * as lucideReact from "lucide-react";
 import { fileService } from "@/services/file";
 import { FileUploadResponse, SystemPolicy } from "@/types";
 import { formatFileSize } from "@/utils/format";
+import { copyToClipboard } from "@/utils/copy";
 
 export default function UploadPage() {
   const [policy, setPolicy] = useState<SystemPolicy | null>(null);
@@ -84,12 +85,14 @@ export default function UploadPage() {
     return result.file.shareLink || "";
   };
 
-  const copyShareLink = () => {
+  const handleCopyLink = async () => {
     const link = getShareUrl();
     if (!link) return;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyToClipboard(link);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -182,7 +185,7 @@ export default function UploadPage() {
                     className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none"
                   />
                   <button
-                    onClick={copyShareLink}
+                    onClick={handleCopyLink}
                     className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                   >
                     <lucideReact.Copy className="w-4 h-4 mr-1.5" />

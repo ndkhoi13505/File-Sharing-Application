@@ -8,6 +8,7 @@ import { User, File, UserFilesResponse } from "@/types";
 import UploadModal from "@/components/UploadModal";
 import UserAvatar from "@/components/UserAvatar";
 import FileInfoModal from "@/components/FileInfoModal";
+import { copyToClipboard } from "@/utils/copy";
 import * as lucideReact from "lucide-react";
 
 function getRemainingTimeBadge(file: File) {
@@ -220,11 +221,13 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCopyLink = (file: File) => {
+  const handleCopyLink = async (file: File) => {
     const shareUrl = `${window.location.origin}/f/${file.shareToken}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopiedId(file.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    const ok = await copyToClipboard(shareUrl);
+    if (ok) {
+      setCopiedId(file.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   const handleDownloadSingleFile = async (fileItem: File) => {
