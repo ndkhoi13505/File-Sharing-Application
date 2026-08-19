@@ -1,4 +1,3 @@
-// file: internal/app/admin_module.go (Mới)
 package app
 
 import (
@@ -14,15 +13,13 @@ type adminModule struct {
 	routes routes.Route
 }
 
-// Cần thêm các tham số FileRepo và Storage để hỗ trợ Cleanup
 func NewAdminModule(
 	cfg *config.Config,
-	fileRepo repository.FileRepository, // <-- THÊM
-	storageService storage.Storage, // <-- THÊM
+	fileRepo repository.FileRepository,
+	storageService storage.Storage,
 ) Module {
 
-	// Policy tĩnh: không cần Repository
-	adminService := service.NewAdminService(cfg, fileRepo, storageService) // <-- CẬP NHẬT
+	adminService := service.NewAdminService(cfg, fileRepo, storageService)
 	adminHandler := handlers.NewAdminHandler(adminService)
 	adminRoutes := routes.NewAdminRoutes(adminHandler)
 

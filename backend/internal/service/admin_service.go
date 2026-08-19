@@ -131,19 +131,15 @@ func (s *adminService) CleanupExpiredFiles(ctx context.Context) (int, *utils.Ret
 	now := time.Now().UTC()
 	deletedCount := 0
 
-	// Duyệt qua tất cả các file
 	for _, file := range files {
-		// 1. Kiểm tra ngày hết hạn
 		if file.AvailableTo.Before(now) {
 
 			if err := s.storage.DeleteFile(file.Id); err.IsErr() {
-				// Log lỗi nhưng tiếp tục sang file tiếp theo
 				log.Printf("Cleanup Error: Failed to delete physical file %s: %v, ignoring...", file.Id, err)
 				continue
 			}
 
 			if err := s.fileRepo.DeleteFile(ctx, file.Id); err.IsErr() {
-				// Log lỗi nhưng tiếp tục sang file tiếp theo
 				log.Printf("Cleanup Error: Failed to delete metadata for file %s: %v, ignoring...", file.Id, err)
 				continue
 			}

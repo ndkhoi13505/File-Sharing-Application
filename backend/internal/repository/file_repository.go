@@ -37,19 +37,18 @@ func NewFileRepository(db *sql.DB) FileRepository {
 }
 
 func (r *fileRepository) CreateFile(ctx context.Context, file *domain.File) (*domain.File, *utils.ReturnStatus) {
-	// 1. Xử lý giá trị NULL cho cột UUID và Password
 	var userID any
 	if file.OwnerId != nil {
 		userID = *file.OwnerId
 	} else {
-		userID = nil // Anonymous Upload
+		userID = nil // Upload ẩn danh
 	}
 
 	var passwordHash any
 	if file.PasswordHash != nil {
 		passwordHash = *file.PasswordHash
 	} else {
-		passwordHash = nil // File ko có password
+		passwordHash = nil
 	}
 
 	query := `
@@ -217,7 +216,6 @@ func (r *fileRepository) DeleteFile(ctx context.Context, id string) *utils.Retur
 }
 
 func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params domain.ListFileParams) ([]domain.File, *utils.ReturnStatus) {
-	// 1. Khởi tạo truy vấn cơ bản
 	baseQuery := `
 		SELECT
 			id, user_id, name, type, size, share_token,
@@ -227,16 +225,14 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 	`
 	args := []any{userID}
 	query := baseQuery
-	argCounter := 2 // Trỏ tới tham số tiếp theo (bắt đầu bằng $2)
+	argCounter := 2
 
-	// Lọc theo từ khóa tìm kiếm (Search) nếu có truyền lên
 	if params.Search != "" {
 		query += fmt.Sprintf(" AND name ILIKE $%d", argCounter)
 		args = append(args, "%"+params.Search+"%")
 		argCounter++
 	}
 
-	// 2. Lọc theo trạng thái (Status)
 	if strings.ToLower(params.Status) != "all" {
 		status := strings.ToLower(params.Status)
 
@@ -252,7 +248,6 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 		}
 	}
 
-	// 3. Thêm sắp xếp
 	safeSortBy := "created_at"
 	if params.SortBy == "fileName" {
 		safeSortBy = "name"
@@ -264,12 +259,9 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 
 	query += fmt.Sprintf(" ORDER BY %s %s", safeSortBy, safeOrder)
 
-	// 4. Thêm phân trang (Pagination)
-	// Đảm bảo số thứ tự tham số ($) động chính xác
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCounter, argCounter+1)
 	args = append(args, int64(params.Limit), int64((params.Page-1)*params.Limit))
 
-	// 5. Thực thi truy vấn
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
@@ -306,6 +298,10 @@ func (r *fileRepository) GetMyFiles(ctx context.Context, userID string, params d
 		}
 
 		files = append(files, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
 	return files, nil
@@ -452,6 +448,7 @@ func (r *fileRepository) GetFileDownloadHistory(ctx context.Context, fileID stri
 	if derr != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, derr.Error())
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var time time.Time
@@ -469,6 +466,10 @@ func (r *fileRepository) GetFileDownloadHistory(ctx context.Context, fileID stri
 				DownloadedAt:      time,
 				DownloadCompleted: true,
 			})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
 	return &history, nil
@@ -522,13 +523,15 @@ func (r *fileRepository) GetFileStats(ctx context.Context, fileID string) (*doma
 
 func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]domain.File, *utils.ReturnStatus) {
 	query := `
-        SELECT DISTINCT f.id, f.created_at
+		SELECT DISTINCT 
+			f.id, f.user_id, f.name, f.type, f.size, f.share_token,
+			f.password, f.available_from, f.available_to, f.created_at, f.is_public
 		FROM files f
 		JOIN shared s ON f.id = s.file_id
 		LEFT JOIN users u ON f.user_id = u.id
 		WHERE (NOW() >= f.available_from AND NOW() < f.available_to)
 		  AND s.user_id = $1
-    `
+	`
 	args := []any{userID}
 
 	if search != "" {
@@ -538,31 +541,40 @@ func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, 
 
 	query += " ORDER BY f.created_at DESC"
 
-	var rows *sql.Rows = nil
-	var err error = nil
-
-	rows, err = r.db.QueryContext(ctx, query, args...)
-
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
 	}
 	defer rows.Close()
 
 	var out []domain.File
-
 	for rows.Next() {
-		var fileID string
-		var createdAt time.Time
-		if err := rows.Scan(&fileID, &createdAt); err != nil {
+		var f domain.File
+		var ownerID sql.NullString
+		var passwordHash sql.NullString
+
+		err := rows.Scan(
+			&f.Id, &ownerID, &f.FileName, &f.MimeType, &f.FileSize, &f.ShareToken,
+			&passwordHash, &f.AvailableFrom, &f.AvailableTo, &f.CreatedAt, &f.IsPublic,
+		)
+		if err != nil {
 			return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
 		}
 
-		file, err := r.GetFileByID(ctx, fileID)
-		if err != nil {
-			return nil, err
+		if ownerID.Valid {
+			f.OwnerId = &ownerID.String
+		}
+		if passwordHash.Valid {
+			f.HasPassword = true
+			f.PasswordHash = &passwordHash.String
 		}
 
-		out = append(out, *file)
+		f.Status = "active"
+		out = append(out, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeInternal, err.Error())
 	}
 
 	return out, nil
@@ -570,7 +582,7 @@ func (r *fileRepository) GetAccessibleFiles(ctx context.Context, userID string, 
 
 func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFileParams) ([]domain.File, int, *utils.ReturnStatus) {
 	var totalRecords int
-	countQuery := "SELECT COUNT(id) FROM files WHERE 1=1" // Dùng WHERE 1=1 để dễ nối chuỗi "AND" phía sau
+	countQuery := "SELECT COUNT(id) FROM files WHERE 1=1" // Dùng WHERE 1=1 để nối chuỗi "AND" phía sau
 	countArgs := []any{}
 	argCounter := 1
 
@@ -580,7 +592,6 @@ func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFile
 		argCounter++
 	}
 
-	// Lọc theo Status (Active / Pending / Expired)
 	if strings.ToLower(params.Status) != "all" {
 		switch strings.ToLower(params.Status) {
 		case "active":
@@ -605,7 +616,7 @@ func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFile
 		WHERE 1=1
 	`
 	selectArgs := []any{}
-	argCounter = 1 // Reset lại counter cho query mới
+	argCounter = 1
 
 	if params.Search != "" {
 		selectQuery += fmt.Sprintf(" AND name ILIKE $%d", argCounter)
@@ -677,6 +688,10 @@ func (r *fileRepository) GetAllFiles(ctx context.Context, params domain.ListFile
 		}
 
 		files = append(files, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
 	return files, totalRecords, nil

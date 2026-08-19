@@ -30,7 +30,6 @@ func NewJWTService() TokenService {
 }
 
 func (js *JWTService) GenerateAccessToken(user domain.User) (string, error) {
-	// Implement token generation logic here
 	claims := &Claims{
 		UserID: user.Id,
 		Email:  user.Email,

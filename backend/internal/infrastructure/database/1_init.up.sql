@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS files (
     created_at TIMESTAMPTZ DEFAULT now(),
     available_from TIMESTAMPTZ,
     available_to TIMESTAMPTZ,
-    share_token TEXT,
+    share_token TEXT UNIQUE,
     CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS filestat (
-    file_id UUID NOT NULL,
+    file_id UUID PRIMARY KEY,
     download_count BIGINT DEFAULT 0,
     user_download_count BIGINT DEFAULT 0,
     CONSTRAINT filestat_file_id_fkey FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
@@ -46,11 +46,12 @@ CREATE TABLE IF NOT EXISTS download (
 CREATE TABLE IF NOT EXISTS jwt_blacklist (
     id SERIAL PRIMARY KEY,
     token TEXT NOT NULL,
-    expired_at TIMESTAMP NOT NULL
+    expired_at TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS usersLoginSession (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    cid UUID NOT NULL
+    cid UUID NOT NULL,
+    CONSTRAINT usersloginsession_id_fkey FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
 DROP PROCEDURE IF EXISTS proc_download(UUID, UUID);
 CREATE PROCEDURE proc_download(f_id UUID, u_id UUID) LANGUAGE SQL AS $$
@@ -72,7 +73,7 @@ VALUES (f_id, u_id);
 $$;
 -- =========================================================================
 -- Admin username:  admin
--- Admin email:     admin@filesharing.com
+-- Admin email:     admin@file-sharing.com
 -- Admin password:  Admin@123
 -- =========================================================================
 INSERT INTO users (
@@ -86,7 +87,7 @@ INSERT INTO users (
 VALUES (
         'admin',
         '$2a$10$PTihvTvrf7J3Fl.Od69fPuXkZGlqyl3ZFFGtevLvlkF6OAw5I8leC',
-        'admin@filesharing.com',
+        'admin@file-sharing.com',
         'admin',
         FALSE,
         ''

@@ -17,7 +17,7 @@ func InitDB(dsn string) (*sql.DB, error) {
 	}
 
 	DB.SetMaxIdleConns(3)                   // Số kết nối nhàn rỗi tối đa
-	DB.SetMaxOpenConns(30)                  // Số kết nối tôi đa
+	DB.SetMaxOpenConns(30)                  // Số kết nối tối đa
 	DB.SetConnMaxLifetime(30 * time.Minute) // Đóng kết nối sau 30 phút
 	DB.SetConnMaxIdleTime(5 * time.Minute)  // Đóng kết nối nhàn rỗi sau 5 phút
 

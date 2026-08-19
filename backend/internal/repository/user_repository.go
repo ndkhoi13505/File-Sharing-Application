@@ -102,6 +102,10 @@ func (ur *SQLUserRepository) FindNonExistingEmails(emails []string) ([]string, *
 		}
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, utils.ErrIfExists(utils.ErrCodeDatabaseError, err)
+	}
+
 	var missingEmails []string
 	for _, email := range cleanEmails {
 		if !existingMap[email] {

@@ -3,10 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
-	"strings"
 
+	"github.com/lib/pq"
 	"github.com/ndkhoi13505/File-Sharing-Application/internal/domain"
 	"github.com/ndkhoi13505/File-Sharing-Application/pkg/utils"
 )
@@ -29,42 +28,17 @@ func (r *sharedRepository) ShareFileWithUsers(ctx context.Context, fileID string
 		return nil
 	}
 
-	var emailstrings []string
-	for _, e := range emails {
-		emailstrings = append(emailstrings, fmt.Sprintf("'%s'", e))
-	}
-
-	userIDQuery := fmt.Sprintf(`SELECT id FROM users WHERE email IN (%s);`, strings.Join(emailstrings, ", "))
-
-	userIDsRaw, err := r.db.QueryContext(ctx, userIDQuery)
-	if err != nil {
-		log.Println("Email retrieval failure")
-		return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
-	}
-
-	var queryValues []string
-	for userIDsRaw.Next() {
-		var userid_tmp string
-		if err := userIDsRaw.Scan(&userid_tmp); err != nil {
-			log.Println("Email scan failure")
-			return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
-		}
-
-		queryValues = append(queryValues, fmt.Sprintf("('%s', '%s')", userid_tmp, fileID))
-	}
-
-	if len(queryValues) == 0 {
-		return nil
-	}
-
-	query := fmt.Sprintf(`
+	query := `
 		INSERT INTO shared (user_id, file_id)
-		VALUES %s
+		SELECT id, $1
+		FROM users
+		WHERE LOWER(email) = ANY($2)
 		ON CONFLICT (user_id, file_id) DO NOTHING
-	`, strings.Join(queryValues, ", "))
+	`
 
-	if _, err := r.db.ExecContext(ctx, query); err != nil {
-		log.Println("INSERT failure")
+	_, err := r.db.ExecContext(ctx, query, fileID, pq.Array(emails))
+	if err != nil {
+		log.Println("ShareFileWithUsers error: ", err)
 		return utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
@@ -72,11 +46,7 @@ func (r *sharedRepository) ShareFileWithUsers(ctx context.Context, fileID string
 }
 
 func (r *sharedRepository) GetUsersSharedWith(ctx context.Context, fileID string) (*domain.Shared, *utils.ReturnStatus) {
-	// SELECT * FROM shared_with WHERE file_id = $1
-
-	query := `
-		SELECT user_id FROM shared WHERE file_id = $1
-	`
+	query := `SELECT user_id FROM shared WHERE file_id = $1`
 
 	share := domain.Shared{
 		FileId:  fileID,
@@ -85,19 +55,22 @@ func (r *sharedRepository) GetUsersSharedWith(ctx context.Context, fileID string
 
 	rows, err := r.db.QueryContext(ctx, query, fileID)
 	if err != nil {
-		log.Println(err)
+		log.Println("GetUsersSharedWith query error: ", err)
 		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
+	defer rows.Close()
 
 	for rows.Next() {
-		var userid_tmp string
-
-		if err := rows.Scan(&userid_tmp); err != nil {
-			log.Println(err)
+		var userid string
+		if err := rows.Scan(&userid); err != nil {
+			log.Println("GetUsersSharedWith scan error: ", err)
 			return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 		}
+		share.UserIds = append(share.UserIds, userid)
+	}
 
-		share.UserIds = append(share.UserIds, userid_tmp)
+	if err := rows.Err(); err != nil {
+		return nil, utils.ResponseMsg(utils.ErrCodeDatabaseError, err.Error())
 	}
 
 	return &share, nil

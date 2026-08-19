@@ -12,11 +12,11 @@ func RunMigrations(dsn string) {
 		dsn,
 	)
 	if err != nil {
-		log.Fatal("migration init failed:", err)
+		log.Fatal("migration init failed: ", err)
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal("migration failed:", err)
+		log.Fatal("migration failed: ", err)
 	}
 
 	log.Println("database migration completed")

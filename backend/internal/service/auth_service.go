@@ -96,24 +96,20 @@ func (as *authService) Login(email, password string) (*domain.User, string, *uti
 
 }
 func (as *authService) LoginTOTP(cid, totpCode string) (*domain.User, string, *utils.ReturnStatus) {
-	// Find session
 	sess := &domain.UsersLoginSession{}
 	if err := as.userRepo.FindByCId(cid, sess); err != nil {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Wrong CID")
 	}
 
-	// Find user
 	user := &domain.User{}
 	if err := as.userRepo.FindById(sess.Id, user); err != nil {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Invalid ID")
 	}
 
-	// Validate TOTP
 	if !totp.Validate(totpCode, user.SecretTOTP) {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Invalid or expired TOTP code")
 	}
 
-	// Parse UUID & check expiration
 	CID, err := uuid.Parse(cid)
 	if err != nil {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Invalid CID format")
@@ -125,17 +121,15 @@ func (as *authService) LoginTOTP(cid, totpCode string) (*domain.User, string, *u
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Failed to get current time")
 	}
 
-	// Always delete timestamp first
 	if err := as.userRepo.DeleteTimestamp(user.Id); err != nil {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "Delete timestamp failed")
 	}
 
-	// Check expiration (5 minutes)
+	// Thời hạn cho mỗi CID là 5 phút
 	if int64(now-ts) > 300*10_000_000 {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized, "CID has expired")
 	}
 
-	// Generate access token
 	accessToken, err := as.tokenService.GenerateAccessToken(*user)
 	if err != nil {
 		return nil, "", utils.ResponseMsg(utils.ErrCodeUnauthorized,
@@ -217,24 +211,20 @@ func (as *authService) VerifyTOTP(userID string, code string) (bool, *utils.Retu
 }
 
 func (as *authService) DisableTOTP(userID string, code string) (bool, *utils.ReturnStatus) {
-	// 1. Lấy secret hiện tại của user để kiểm chứng
 	secret, err := as.authRepo.GetSecret(userID)
 	if err != nil {
 		return false, err
 	}
 
-	// Nếu user chưa từng cài TOTP thì không cần tắt
 	if secret == "" {
 		return false, utils.ResponseMsg(utils.ErrCodeBadRequest, "TOTP is not enabled for this account")
 	}
 
-	// 2. Xác thực mã code người dùng gửi lên
 	valid := totp.Validate(code, secret)
 	if !valid {
-		return false, nil // Trả về false để báo mã code không chính xác
+		return false, nil
 	}
 
-	// 3. Nếu mã hợp lệ, tiến hành tắt trong DB
 	if err := as.authRepo.DisableTOTP(userID); err != nil {
 		return true, utils.ResponseMsg(utils.ErrCodeInternal, fmt.Sprintf("Failed to disable TOTP: %v", err))
 	}
@@ -243,29 +233,24 @@ func (as *authService) DisableTOTP(userID string, code string) (bool, *utils.Ret
 }
 
 func (as *authService) ChangePassword(userID string, oldPassword, newPassword string) *utils.ReturnStatus {
-	// 1. Lấy thông tin user hiện tại từ Database
 	user := &domain.User{}
 	if err := as.userRepo.FindById(userID, user); err != nil {
 		return utils.ResponseMsg(utils.ErrCodeInternal, "User not found")
 	}
 
-	// 2. So sánh mật khẩu cũ người dùng nhập với mật khẩu lưu trong DB
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
 		return utils.ResponseMsg(utils.ErrCodeBadRequest, "The old password is incorrect")
 	}
 
-	// Kiểm tra xem mật khẩu mới có trùng mật khẩu cũ không (Tùy chọn bảo mật bổ sung)
 	if oldPassword == newPassword {
 		return utils.ResponseMsg(utils.ErrCodeBadRequest, "New password cannot be the same as the old password")
 	}
 
-	// 3. Tiến hành mã hóa mật khẩu mới
 	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return utils.ResponseMsg(utils.ErrCodeInternal, "Failed to hash new password")
 	}
 
-	// 4. Lưu mật khẩu mới vào DB thông qua repo
 	if repoErr := as.authRepo.ChangePassword(userID, string(newPasswordHash)); repoErr != nil {
 		return repoErr
 	}

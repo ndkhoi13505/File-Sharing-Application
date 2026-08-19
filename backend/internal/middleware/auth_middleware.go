@@ -60,7 +60,7 @@ func AuthMiddlewareUpload() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			return // Skip Authorization if token is missing.
+			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")

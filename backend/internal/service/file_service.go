@@ -39,10 +39,10 @@ func NewFileService(cfg *config.Config, fr repository.FileRepository, sr reposit
 	}
 }
 
-// Hàm tính toán thời gian hiệu lực
+// Hàm tính toán thời gian hiệu lực của file
 func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time, time.Time, int, *utils.ReturnStatus) {
 	now := time.Now().UTC()
-	policy := s.cfg.Policy // Policy tĩnh
+	policy := s.cfg.Policy
 
 	var availableFrom, availableTo time.Time
 	var validityDays int
@@ -62,8 +62,8 @@ func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time
 		availableTo = now.Add(time.Hour * 24 * time.Duration(policy.DefaultValidityDays))
 	}
 
-	// 2. Validation
-	// a. FROM < TO
+	// 2. Kiểm tra điều kiện
+	// a. From < To
 	if availableFrom.After(availableTo) {
 		return time.Time{}, time.Time{}, 0, utils.ResponseMsg(utils.ErrCodeBadRequest, "AvailableFrom cannot be after AvailableTo")
 	}
@@ -71,7 +71,7 @@ func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time
 	duration := availableTo.Sub(availableFrom)
 	validityDays = int(duration.Hours() / 24)
 
-	// b. Khoảng cách tối thiểu/tối đa
+	// b. Khoảng thời gian  tối thiểu / tối đa
 	minDuration := time.Duration(policy.MinValidityHours) * time.Hour
 	maxDuration := time.Duration(policy.MaxValidityDays) * 24 * time.Hour
 
@@ -86,12 +86,10 @@ func (s *fileService) calculateValidityPeriod(req *dto.UploadRequest) (time.Time
 }
 
 func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.FileHeader, req *dto.UploadRequest, ownerID *string) (*domain.File, *utils.ReturnStatus) {
-	// Kiểm tra kích thước file (Sử dụng MaxFileSizeMB từ Policy)
 	if fileHeader.Size > int64(s.cfg.Policy.MaxFileSizeMB)*1024*1024 {
 		return nil, utils.Response(utils.ErrCodeUploadFileTooBig)
 	}
 
-	// 1. Tính toán thời gian hiệu lực
 	availableFrom, availableTo, validityDays, err := s.calculateValidityPeriod(req)
 	if err.IsErr() {
 		return nil, err
@@ -103,7 +101,6 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 			return nil, errStatus
 		}
 
-		// Nếu phát hiện có ít nhất 1 email chưa từng đăng ký tài khoản -> Trả lỗi báo Bad Request!
 		if len(missingEmails) > 0 {
 			return nil, utils.ResponseMsg(
 				utils.ErrCodeBadRequest,
@@ -112,9 +109,8 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 		}
 	}
 
-	// 2. Chuẩn bị File Metadata
 	fileUUID := uuid.New().String()
-	shareToken := utils.GenerateRandomString(16) // Hàm tạo token ngẫu nhiên 16 ký tự
+	shareToken := utils.GenerateRandomString(16) // Hàm tạo sharetoken ngẫu nhiên gồm 16 ký tự
 
 	var passwordHash *string
 	if req.Password != nil && *req.Password != "" {
@@ -131,11 +127,11 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 		Id:            fileUUID,
 		OwnerId:       ownerID,
 		FileName:      fileHeader.Filename,
-		StorageName:   storageFileName, // Tên file trên thiết bị lưu trữ vật lý là UUID của file
+		StorageName:   storageFileName,
 		FileSize:      fileHeader.Size,
 		MimeType:      fileHeader.Header.Get("Content-Type"),
 		ShareToken:    shareToken,
-		IsPublic:      req.IsPublic || ownerID == nil, // File phải public khi được upload ẩn danh
+		IsPublic:      req.IsPublic || ownerID == nil,
 		HasPassword:   passwordHash != nil,
 		PasswordHash:  passwordHash,
 		AvailableFrom: availableFrom,
@@ -144,21 +140,17 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 		CreatedAt:     time.Now().UTC(),
 	}
 
-	// 3. Lưu file vật lý
 	_, err = s.storage.SaveFile(fileHeader, newFile.StorageName)
 	if err.IsErr() {
 		return nil, err
 	}
 
-	// 4. Lưu Metadata vào DB
 	savedFile, err := s.fileRepo.CreateFile(ctx, newFile)
 	if err.IsErr() {
-		// QUAN TRỌNG: Nếu lưu DB lỗi, phải xóa file đã lưu vật lý!
 		s.storage.DeleteFile(newFile.StorageName)
 		return nil, err
 	}
 
-	// 5. Xử lý SharedWith
 	if req.SharedWith != nil {
 		if err := s.sharedRepo.ShareFileWithUsers(ctx, savedFile.Id, req.SharedWith); err != nil {
 			return nil, err
@@ -169,11 +161,8 @@ func (s *fileService) UploadFile(ctx context.Context, fileHeader *multipart.File
 }
 
 func (s *fileService) GetMyFiles(ctx context.Context, userID string, params domain.ListFileParams) (interface{}, *utils.ReturnStatus) {
-	// Lấy danh sách file của user đó
 	fileSummary, err := s.fileRepo.GetFileSummary(ctx, userID)
 	if err.IsErr() {
-		// Log lỗi hoặc xử lý lỗi một cách nhẹ nhàng hơn nếu summary không bắt buộc
-		// Trong trường hợp này, ta sẽ trả về lỗi
 		return nil, err
 	}
 	totalFiles, err := s.fileRepo.GetTotalUserFiles(ctx, userID, params.Search)
@@ -208,11 +197,10 @@ func (s *fileService) GetMyFiles(ctx context.Context, userID string, params doma
 		})
 	}
 
-	// 5. Trả về kết quả với dữ liệu thực tế
 	return gin.H{
 		"files":      out,
-		"pagination": pagination,  // Dữ liệu phân trang thực tế
-		"summary":    fileSummary, // Dữ liệu summary thực tế
+		"pagination": pagination,
+		"summary":    fileSummary,
 	}, nil
 }
 
@@ -226,7 +214,6 @@ func (s *fileService) DeleteFile(ctx context.Context, fileID string, userID stri
 		return errStatus
 	}
 
-	// Kiểm tra quyền: Chỉ Owner hoặc Admin mới được xóa
 	isAdmin := requester.Role == "admin"
 	isOwner := file.OwnerId != nil && *file.OwnerId == userID
 	isAnonymous := file.OwnerId == nil
@@ -241,7 +228,6 @@ func (s *fileService) DeleteFile(ctx context.Context, fileID string, userID stri
 		}
 	}
 
-	// Xóa vật lý trước
 	if err := s.storage.DeleteFile(fileID); err.IsErr() {
 		return err
 	}
@@ -472,12 +458,9 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string, u
 
 	if file.OwnerId == nil {
 		if !isAdmin {
-			// Nếu KHÔNG PHẢI ADMIN gọi, báo lỗi không có quyền (hoặc không tìm thấy tùy bạn thiết kế)
 			return nil, utils.Response(utils.ErrCodeStatForbidden)
 		}
-		// Nếu là Admin, bỏ qua block này để đi tiếp xuống dưới lấy stats!
 	} else {
-		// Nếu file CÓ chủ sở hữu, người yêu cầu bắt buộc phải là Owner hoặc Admin[cite: 6]
 		if !isAdmin && !isOwner {
 			return nil, utils.Response(utils.ErrCodeStatForbidden)
 		}
@@ -487,7 +470,6 @@ func (s *fileService) GetFileStats(ctx context.Context, fileID, userID string, u
 }
 
 func (s *fileService) GetAccessibleFiles(ctx context.Context, userID string, search string) ([]dto.AccessibleFile, *utils.ReturnStatus) {
-	// Truyền thêm tham số search vào Repo
 	files, err := s.fileRepo.GetAccessibleFiles(ctx, userID, search)
 
 	if err != nil {

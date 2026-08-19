@@ -80,7 +80,6 @@ func (fh *FileHandler) UploadFile(ctx *gin.Context) {
 		"isPublic":   uploadedFile.IsPublic,
 	}
 
-	//utils.ResponseSuccess(ctx, http.StatusCreated, "File uploaded successfully", gin.H{"file": response})
 	ctx.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"file":    response,
@@ -145,7 +144,6 @@ func (fh *FileHandler) GetMyFiles(ctx *gin.Context) {
 		return
 	}
 
-	//utils.ResponseSuccess(ctx, http.StatusOK, "User files retrieved successfully", gin.H{"file": result})
 	ctx.JSON(http.StatusOK, result)
 }
 
@@ -181,7 +179,6 @@ func (fh *FileHandler) GetFileInfo(ctx *gin.Context) {
 		"mimeType":    file.MimeType,
 	}
 
-	//utils.ResponseSuccess(ctx, http.StatusOK, "File retrieved successfully", gin.H{"file": result})
 	ctx.JSON(http.StatusOK, gin.H{
 		"file": out,
 	})
@@ -212,22 +209,19 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 	}
 
 	out := gin.H{
-		"id":          file.Id,
-		"fileName":    file.FileName,
-		"fileSize":    file.FileSize,
-		"mimeType":    file.MimeType,
-		"shareToken":  file.ShareToken,
-		"shareLink":   fmt.Sprintf("http://localhost:8080/files/%s", file.ShareToken),
-		"isPublic":    file.IsPublic,
-		"hasPassword": file.HasPassword,
-
-		"availableFrom": file.AvailableFrom,
-		"availableTo":   file.AvailableTo,
-		"status":        file.Status,
-
+		"id":             file.Id,
+		"fileName":       file.FileName,
+		"fileSize":       file.FileSize,
+		"mimeType":       file.MimeType,
+		"shareToken":     file.ShareToken,
+		"shareLink":      fmt.Sprintf("http://localhost:8080/files/%s", file.ShareToken),
+		"isPublic":       file.IsPublic,
+		"hasPassword":    file.HasPassword,
+		"availableFrom":  file.AvailableFrom,
+		"availableTo":    file.AvailableTo,
+		"status":         file.Status,
 		"hoursRemaining": file.AvailableTo.Sub(file.AvailableFrom).Hours(),
-
-		"createdAt": file.CreatedAt,
+		"createdAt":      file.CreatedAt,
 	}
 
 	if owner != nil {
@@ -238,14 +232,13 @@ func (fh *FileHandler) GetFileInfoVerbose(ctx *gin.Context) {
 			"role":     owner.Role,
 		}
 	} else {
-		out["owner"] = nil // Hoặc không gán gì cả để trả về null cho Frontend biết đây là file ẩn danh
+		out["owner"] = nil
 	}
 
 	if shared != nil {
 		out["sharedWith"] = shared
 	}
 
-	//utils.ResponseSuccess(ctx, http.StatusOK, "File retrieved successfully", gin.H{"file": result})
 	ctx.JSON(http.StatusOK, gin.H{
 		"file": out,
 	})
@@ -368,10 +361,8 @@ func (fh *FileHandler) GetAccessibleFiles(ctx *gin.Context) {
 		return
 	}
 
-	// 1. Lấy từ khóa tìm kiếm từ query param '?q=...' trên URL
 	search := ctx.Query("q")
 
-	// 2. Truyền chuỗi search (đã cắt khoảng trắng thừa) vào service
 	files, err := fh.file_service.GetAccessibleFiles(ctx, userID.(string), strings.TrimSpace(search))
 	if err != nil {
 		err.Export(ctx)
