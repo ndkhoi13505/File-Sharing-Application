@@ -182,7 +182,7 @@ export default function FileInfoModal({ fileId, onClose }: FileInfoModalProps) {
                                         </div>
                                         <div>
                                             <span className="text-gray-500 block text-xs mb-0.5">Quyền truy cập:</span>
-                                            <span className="font-semibold text-gray-900 text-sm">{fileDetail.isPublic ? "Công khai" : "Riêng tư (Whitelist)"}</span>
+                                            <span className="font-semibold text-gray-900 text-sm">{fileDetail.isPublic ? "Công khai" : "Riêng tư"}</span>
                                         </div>
                                         <div>
                                             <span className="text-gray-500 block text-xs mb-0.5">Mật khẩu bảo vệ:</span>
